@@ -1,0 +1,105 @@
+---
+###############################################################################
+# Audit Log (auditLog)
+###############################################################################
+# All options are only available for Enterprise licenses.
+#
+# Reference:
+# * https://www.mongodb.com/docs/manual/reference/configuration-options
+
+# KMIP key identifier for audit log encryption.
+#
+# Mutually exclusive with mongodb_cfg_audit_log_local_audit_key_file.
+#
+# Default: ''
+mongodb_cfg_audit_log_audit_encryption_key_identifier: ''
+
+# Compression mode for audit log encryption.
+#
+# Requires mongodb_cfg_audit_log_audit_encryption_key_identifier or
+# mongodb_cfg_audit_log_local_audit_key_file set.
+#
+# Values:
+#   zstd: Fast lossless real-time compression algorithm (Facebook).
+#   none: Disable compression (default).
+#
+# Default: 'none' (disabled).
+mongodb_cfg_audit_log_compression_mode: 'none'
+
+# Enable auditing and send all events to destination.
+#
+# Values:
+#    syslog: Use syslog in JSON format. Audit messages have a syslog severity
+#            level of info and a facility level of user. Syslog message limit
+#            can result in truncation of audit messages. Auditing system
+#            neither detects truncation nor errors upon its occurrence.
+#   console: Use stdout in JSON format.
+#      file: Use file specified in mongodb_cfg_audit_log_path in format
+#            specified with mongodb_cfg_audit_log_format. Requires:
+#            * mongodb_cfg_audit_log_path set.
+#            * mongodb_cfg_audit_log_format set.
+#
+# Default: '' (disabled).
+mongodb_cfg_audit_log_destination: ''
+
+# Filter expression to match operations to audit system records.
+#
+# Special Case:
+# * Use a string representation of a query document of the form:
+#
+#     { <field1>: <expression1>, ... }
+#
+#   <field> can be any field in profiler output.
+#   <expression> is a query condition expression.
+#
+# Default: '' (disabled).
+mongodb_cfg_audit_log_filter: ''
+
+# Output format for audit file logging.
+#
+# Requires mongodb_cfg_audit_log_destination=file.
+#
+# Values:
+#   JSON: JSON format (degrades performance).
+#   BSON: BSON binary format.
+#
+# Default: ''
+mongodb_cfg_audit_log_format: ''
+
+# Local audit key file for audit log encryption.
+#
+# Mutually exclusive with
+# mongodb_cfg_audit_log_audit_encryption_key_identifier.
+#
+# Key is not secured, only use for testing.
+#
+# Sourced from ansible controller; automatically placed in
+# /etc/mongodb/audit/key_file with correct permissions.
+#
+# mongodb_cfg_audit_log_local_audit_key_file:
+#   'host_vars/db.example.com/data/audit_key_file'
+#
+# Default: '' (disabled).
+mongodb_cfg_audit_log_local_audit_key_file: ''
+
+# Audit File.
+#
+# Requires mongodb_cfg_audit_log_destination=file.
+#
+# Default: '' (disabled).
+mongodb_cfg_audit_log_path: ''
+
+# Enable runtime configuration of audit filters, auditAuthorizationSuccess?
+#
+# Default: False.
+mongodb_cfg_audit_log_runtime_configuration: false
+
+# Format used for audit logs.
+#
+# Values:
+#   mongo: Logs are written in a format designed by MongoDB.
+#    OCSF: Logs are written in OCSF format. This option provides logs in a
+#          standardized format compatible with log processors.
+#
+# Default: 'mongo'.
+mongodb_cfg_audit_log_schema: 'mongo'

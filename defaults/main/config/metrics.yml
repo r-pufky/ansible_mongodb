@@ -1,0 +1,18 @@
+---
+###############################################################################
+# Metrics (metrics)
+###############################################################################
+# Reference:
+# * https://www.mongodb.com/docs/manual/reference/configuration-options
+
+# Enable prometheus metrics listener endpoint? Default: False.
+mongodb_cfg_metrics_enabled: false
+
+# Address prometheus metrics (/metrics) endpoint is exposed.
+#
+# Values:
+#   {HOST|IP}:{PORT}: Hostname or IPv4/6 with port (e.g. localhost:27028).
+#                 '': Use localhost:9946 (default).
+#
+# Default: ''.
+mongodb_cfg_metrics_address: ''

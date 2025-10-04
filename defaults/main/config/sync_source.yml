@@ -1,0 +1,106 @@
+---
+###############################################################################
+# Sync Source (syncSource)
+###############################################################################
+# Reference:
+# * https://www.mongodb.com/docs/manual/reference/configuration-options
+
+# Sync source replica set host addresses.
+#
+# Values:
+#   {HOST|IP}:{PORT}: Hostname or IP with port (e.g. localhost:27028).
+#
+# Default: [].
+mongodb_cfg_sync_source_replica_set_host_and_port: []
+
+# Sync source replica set username.
+#
+# Username to authenticate mongot with mongod. Specified user must have
+# 'searchCoordinator' role.
+#
+# Default: ''.
+mongodb_cfg_sync_source_replica_set_username: ''
+
+# File containing password that mongot must use to authenticate with mongod.
+#
+# Sourced from ansible controller; automatically placed in
+# /etc/mongodb/replica/password_file with correct permissions.
+#
+# mongodb_cfg_sync_source_replica_set_password_file:
+#   'host_vars/db.example.com/data/password_file'
+#
+# Default: '' (disabled).
+mongodb_cfg_sync_source_replica_set_password_file: ''
+
+# Database associated with mongot authentication credentials.
+#
+# Special Case:
+#   '': default to 'admin'.
+#
+# Default: '' (admin).
+mongodb_cfg_sync_source_replica_set_auth_source: ''
+
+# Enable direct passthrough to TLS connection string option? Default: False.
+mongodb_cfg_sync_source_replica_set_tls: false
+
+# Direct passthrough to read preference connection string option.
+#
+# Special Case:
+#   '': default to 'secondaryPreferred'.
+#
+# Default: '' (secondaryPreferred).
+mongodb_cfg_sync_source_replica_set_read_preference: ''
+
+# Mongos seed list host addresses.
+#
+# Values:
+#   {HOST|IP}:{PORT}: Hostname or IP with port (e.g. localhost:27028).
+#
+# Default: [].
+mongodb_cfg_sync_source_replica_set_router_host_and_port: []
+
+# Username to authenticate mongot with mongos.
+#
+# Username to authenticate mongot with mongos. Specified user must have
+# 'searchCoordinator' role.
+#
+# Default: ''.
+mongodb_cfg_sync_source_replica_set_router_username: ''
+
+# File containing password that mongot must use to authenticate with mongos.
+#
+# Sourced from ansible controller; automatically placed in
+# /etc/mongodb/replica/router_password_file with correct permissions.
+#
+# mongodb_cfg_sync_source_replica_set_router_password_file:
+#   'host_vars/db.example.com/data/router_password_file'
+#
+# Default: '' (disabled).
+mongodb_cfg_sync_source_replica_set_router_password_file: ''
+
+# Enable direct router passthrough to TLS connection string option?
+#
+# Default: False.
+mongodb_cfg_sync_source_replica_set_router_tls: false
+
+# Direct passthrough to read preference connection string option.
+#
+# Special Case:
+#   '': default to 'secondaryPreferred'.
+#
+# Default: '' (secondaryPreferred).
+mongodb_cfg_sync_source_replica_set_router_read_preference: ''
+
+# Trusted CA certificates for verifying mongod endpoint (PEM).
+#
+# File must contain X.509 certificate collection in PEM format. If you specify
+# this option, mongot uses this file instead of system keystore.
+#
+# Sourced from ansible controller; automatically placed in
+# /etc/mongodb/replica/ca.pem with correct permissions.
+#
+# mongodb_cfg_sync_source_replica_set_ca_file:
+#   'host_vars/db.example.com/data/ca.pem'
+#
+# Default: '' (disabled).
+mongodb_cfg_sync_source_replica_set_ca_file: ''

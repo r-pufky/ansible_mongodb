@@ -1,0 +1,65 @@
+---
+###############################################################################
+# Operation Profiling (operationProfiling)
+###############################################################################
+# Reference:
+# * https://www.mongodb.com/docs/manual/reference/configuration-options
+
+# Operation profile level.
+#
+# Profiling can degrade performance and expose unencrypted query data in system
+# log. Carefully consider any performance and security implications before
+# configuring and enabling profiler on a production deployment.
+#
+# Values:
+#       off: Disabled - profiler level 0 (default).
+#    slowOp: Profile operations slower than 'slowms' - profiler level 1.
+#       all: Profile all operations - profiler level 2.
+#
+# Default: 'off' (disabled).
+mongodb_cfg_operation_profiling_mode: 'off'
+
+# Slow operation time threshold (ms).
+#
+# Operations that run longer than this threshold are considered slow.
+#
+# Slow operations are logged based on workingMillis, which is the amount of
+# time that MongoDB spends working on that operation. This means that factors
+# such as waiting for locks and flow control do not affect whether an operation
+# exceeds the slow operation threshold.
+#
+# When logLevel is set to 0, MongoDB records slow operations to the diagnostic
+# log at a rate determined by
+# mongodb_cfg_operation_profiling_slow_op_sample_rate.
+#
+# At higher logLevel settings, all operations appear in the diagnostic log
+# regardless of their latency with the following exception: the logging of slow
+# oplog entry messages by the secondaries. The secondaries log only the slow
+# oplog entries; increasing the logLevel does not log all oplog entries.
+#
+# Default: 100.
+mongodb_cfg_operation_profiling_slow_op_threshold_ms: 100
+
+# Fraction of slow operations that should be profiled or logged.
+#
+# Values:
+#   0.0-1.0: Accepts values between 0 and 1, inclusive.
+#
+# Default: 1.0.
+mongodb_cfg_operation_profiling_slow_op_sample_rate: 1.0
+
+# Filter expression to match operations to profile and log.
+#
+# Ignores mongodb_cfg_operation_profiling_slow_op_threshold_ms and
+# mongodb_cfg_operation_profiling_slow_op_sample_rate when enabled.
+#
+# Special Case:
+# * Use a string representation of a query document of the form:
+#
+#     { <field1>: <expression1>, ... }
+#
+#   <field> can be any field in profiler output.
+#   <expression> is a query condition expression.
+#
+# Default: '' (disabled).
+mongodb_cfg_operation_profiling_filter: ''

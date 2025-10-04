@@ -1,0 +1,35 @@
+---
+###############################################################################
+# Ports Configuration
+###############################################################################
+# Manage firewall with r_pufky.deb.ufw.
+#
+# Reference:
+# * https://github.com/r-pufky/ansible_ufw
+
+mongodb_srv_ports:
+  - proto: 'tcp'
+    from_ip: 'any'
+    to_port: 27017
+    direction: 'in'
+    comment: 'MongoDB mongod/mongos standalone'
+  - proto: 'tcp'
+    from_ip: 'any'
+    to_port: 27018
+    direction: 'in'
+    comment: 'MongoDB mongod shard member'
+  - proto: 'tcp'
+    from_ip: 'any'
+    to_port: 27019
+    direction: 'in'
+    comment: 'MongoDB mongod config member'
+  - proto: 'tcp'
+    from_ip: 'any'
+    to_port: 9946
+    direction: 'in'
+    comment: 'MongoDB prometheus metrics'
+  - proto: 'tcp'
+    from_ip: 'any'
+    to_port: 8080
+    direction: 'in'
+    comment: 'MongoDB health check'

@@ -1,0 +1,13 @@
+---
+###############################################################################
+# Install Packages & Services
+###############################################################################
+
+- name: 'Install | packages'
+  ansible.builtin.include_role:
+    name: 'r_pufky.deb.apt'
+  vars:
+    apt_packages:
+      - '{{ mongodb_role_packages }}'
+    apt_sources: '{{ mongodb_role_apt_sources }}'
+    apt_package_update_cache: true

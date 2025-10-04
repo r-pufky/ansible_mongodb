@@ -1,0 +1,213 @@
+---
+###############################################################################
+# MongoDB Config
+###############################################################################
+# Create additional storage location for keys and certificates. Write
+# configuration to specified locations. Restart service to apply service
+# changes (service must have new settings loaded to apply security, user, and
+# database changes); and install backup job if enabled.
+#
+# Data locations may be mounted over network (with only postgres user and
+# everything else mapping to nobody/nogroup). Execute commands touching those
+# root mount points as postgres user to ensure they can be read or written.
+#
+# Non-existing / default values are NOT rendered in config file.
+
+- name: 'Config | create etc directories'
+  ansible.builtin.file:
+    path: '{{ item }}'
+    owner: 'root'
+    group: 'root'
+    mode: '0755'
+    state: 'directory'
+  loop:
+    - '{{ _mongodb.etc_root }}'
+    - '{{ _mongodb.etc_root ~ "/tls" }}'
+    - '{{ _mongodb.etc_root ~ "/security" }}'
+    - '{{ _mongodb.etc_root ~ "/audit" }}'
+    - '{{ _mongodb.etc_root ~ "/replica" }}'
+    - '{{ _mongodb.etc_root ~ "/grpc" }}'
+
+- name: 'Config | create data directories'
+  when: item | length > 0
+  ansible.builtin.file:
+    path: '{{ item }}'
+    owner: '{{ _mongodb_srv_user._uid }}'
+    group: '{{ _mongodb_srv_group._gid }}'
+    mode: '0755'
+    state: 'directory'
+  become: true
+  become_user: '{{
+      _mongodb_srv_user.raw
+      if _mongodb_srv_user_data_manage_enable.raw else
+      "root"
+    }}'
+  loop:
+    - '{{ _mongodb_cfg_storage_db_path.raw }}'
+    - '{{ _mongodb_cfg_storage_data_path.raw }}'
+
+- name: 'Config | create log directory'
+  when: _mongodb_cfg_logging_log_path.raw | length > 0
+  ansible.builtin.file:
+    path: '{{ _mongodb_cfg_logging_log_path.raw }}'
+    owner: 'root'
+    group: 'root'
+    mode: '0755'
+    state: 'directory'
+
+- name: 'Config | set configured files'
+  when: item.raw | length > 0
+  ansible.builtin.copy:
+    src: '{{ item._src }}'
+    dest: '{{ item._dest }}'
+    owner: '{{ _mongodb_srv_user._uid }}'
+    group: '{{ _mongodb_srv_group._gid }}'
+    mode: '0640'
+    directory_mode: '0755'
+  loop:
+    - '{{ _mongodb_cfg_net_tls_certificate_key_file }}'
+    - '{{ _mongodb_cfg_net_tls_cluster_file }}'
+    - '{{ _mongodb_cfg_net_tls_ca_file }}'
+    - '{{ _mongodb_cfg_net_tls_cluster_ca_file }}'
+    - '{{ _mongodb_cfg_net_tls_crl_file }}'
+    - '{{ _mongodb_cfg_security_key_file }}'
+    - '{{ _mongodb_cfg_security_encryption_key_file }}'
+    - '{{ _mongodb_cfg_security_kmip_client_certificate_file }}'
+    - '{{ _mongodb_cfg_security_kmip_server_ca_file }}'
+    - '{{ _mongodb_cfg_audit_log_local_audit_key_file }}'
+    - '{{ _mongodb_cfg_sync_source_replica_set_password_file }}'
+    - '{{ _mongodb_cfg_sync_source_replica_set_router_password_file }}'
+    - '{{ _mongodb_cfg_sync_source_replica_set_ca_file }}'
+    - '{{ _mongodb_cfg_server_grpc_tls_certificate_key_file }}'
+    - '{{ _mongodb_cfg_server_grpc_tls_ca_file }}'
+  loop_control:
+    label: '{{ item._dest }}'
+
+- name: 'Config | remove unset files'
+  when: item.raw | length == 0
+  ansible.builtin.file:
+    path: '{{ item._dest }}'
+    state: 'absent'
+  loop:
+    - '{{ _mongodb_cfg_net_tls_certificate_key_file }}'
+    - '{{ _mongodb_cfg_net_tls_cluster_file }}'
+    - '{{ _mongodb_cfg_net_tls_ca_file }}'
+    - '{{ _mongodb_cfg_net_tls_cluster_ca_file }}'
+    - '{{ _mongodb_cfg_net_tls_crl_file }}'
+    - '{{ _mongodb_cfg_security_key_file }}'
+    - '{{ _mongodb_cfg_security_encryption_key_file }}'
+    - '{{ _mongodb_cfg_security_kmip_client_certificate_file }}'
+    - '{{ _mongodb_cfg_security_kmip_server_ca_file }}'
+    - '{{ _mongodb_cfg_audit_log_local_audit_key_file }}'
+    - '{{ _mongodb_cfg_sync_source_replica_set_password_file }}'
+    - '{{ _mongodb_cfg_sync_source_replica_set_router_password_file }}'
+    - '{{ _mongodb_cfg_sync_source_replica_set_ca_file }}'
+    - '{{ _mongodb_cfg_server_grpc_tls_certificate_key_file }}'
+    - '{{ _mongodb_cfg_server_grpc_tls_ca_file }}'
+  loop_control:
+    label: '{{ item._dest }}'
+
+- name: 'Config | set /etc/mongod.conf'
+  ansible.builtin.copy:
+    content: '{{ _mongodb_yaml | to_nice_yaml(indent=2) }}'
+    dest: '/etc/mongod.conf'
+    owner: 'root'
+    group: 'root'
+    mode: '0644'
+
+- name: 'Config | set service drop-in'
+  ansible.builtin.include_role:
+    name: 'r_pufky.deb.systemd'
+  vars:
+    systemd_daemon_reload_enable: true
+    systemd_services:
+      - name: 'mongod'
+        state: 'present'
+        drop_in: true
+        service: {}
+        exec:
+          user: '{{ _mongodb_srv_user.raw }}'
+          group: '{{ _mongodb_srv_group.raw }}'
+
+- name: 'Config | enable backups'
+  when: _mongodb_srv_backup_enable.raw
+  block:
+    - name: 'Config | enable backups | set backup directory'
+      ansible.builtin.file:
+        dest: '{{ _mongodb_srv_backup_dir.raw }}'
+        owner: '{{ _mongodb_srv_user._uid }}'
+        group: '{{ _mongodb_srv_group._gid }}'
+        mode: '0750'
+        state: 'directory'
+      become: true
+      become_user: '{{
+          _mongodb_srv_user.raw
+          if _mongodb_srv_user_data_manage_enable.raw else
+          "root"
+        }}'
+
+    - name: 'Config | enable backups | set backup script'
+      ansible.builtin.template:
+        src: 'mongodb_backup.j2'
+        dest: '{{ _mongodb_srv_backup_enable._backup_script }}'
+        owner: '{{ _mongodb_srv_user._uid }}'
+        group: '{{ _mongodb_srv_group._gid }}'
+        mode: '0750'
+      become: true
+      become_user: '{{
+          _mongodb_srv_user.raw
+          if _mongodb_srv_user_data_manage_enable.raw else
+          "root"
+        }}'
+
+    - name: 'Config | enable backups | create backup service'
+      ansible.builtin.include_role:
+        name: 'r_pufky.deb.systemd'
+      vars:
+        systemd_services:
+          - name: 'mongodb_backup'
+            state: 'present'
+            drop_in: false
+            unit:
+              description: 'MongoDB backup service.'
+              requires: ['mongodb_backup.timer']
+            service:
+              type: 'oneshot'
+              exec_start:
+                - '{{ _mongodb_srv_backup_enable._backup_script }}'
+            exec:
+              user: 'root'
+              group: 'root'
+        systemd_timers:
+          - name: 'mongodb_backup'
+            state: 'present'
+            drop_in: false
+            unit:
+              description: 'MongoDB backup service timer.'
+            timer:
+              unit: 'mongodb_backup.service'
+              on_calendar:
+                - '{{ _mongodb_srv_backup_schedule.raw }}'
+            install:
+              wanted_by: ['timers.target']
+
+- name: 'Config | disable backups'
+  when: not _mongodb_srv_backup_enable.raw
+  block:
+    - name: 'Config | disable backups | remove backup script'
+      ansible.builtin.file:
+        dest: '{{ _mongodb_srv_backup_enable._backup_script }}'
+        state: 'absent'
+
+    - name: 'Config | disable backups | remove backup service'
+      ansible.builtin.include_role:
+        name: 'r_pufky.deb.systemd'
+      vars:
+        systemd_services:
+          - name: 'mongodb_backup'
+            state: 'absent'
+            drop_in: false
+        systemd_timers:
+          - name: 'mongodb_backup'
+            state: 'absent'
+            drop_in: false

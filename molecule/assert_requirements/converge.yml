@@ -1,0 +1,249 @@
+---
+# yamllint disable rule:line-length
+- name: 'Converge'
+  hosts: 'all'
+  gather_facts: true  # /proc AVX detection.
+  tasks:
+    - name: 'Converge | assert enterprise detected'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert enterprise detected'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_security_enable_encryption=true did not trigger assertion.'
+        mongodb_cfg_security_enable_encryption: true
+
+    - name: 'Converge | assert PID not used'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert PID not used'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_process_management_pid_file_path=/tmp/mongod.pid did not trigger assertion.'
+        mongodb_cfg_process_management_pid_file_path: '/tmp/mongod.pid'
+
+    - name: 'Converge | assert fork not used'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert fork not used'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_process_management_fork=true did not trigger assertion.'
+        mongodb_cfg_process_management_fork: true
+
+    - name: 'Converge | assert fatal version mismatch'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert fatal version mismatch'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_srv_version=7.2 did not trigger assertion.'
+        mongodb_srv_version: '7.2'
+
+    - name: 'Converge | assert log rotate reopen'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert log rotate reopen'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_system_log_log_append=false did not trigger assertion.'
+        mongodb_cfg_system_log_log_rotate: 'reopen'
+        mongodb_cfg_system_log_log_append: false
+
+    - name: 'Converge | assert mutually exclusion bind IP'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert mutually exclusion bind IP'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_net_bind_ip_all=true did not trigger assertion.'
+        mongodb_cfg_net_bind_ip: ['127.0.0.1']
+        mongodb_cfg_net_bind_ip_all: true
+
+    - name: 'Converge | assert TLS requirements'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert TLS requirements'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_net_bind_ip_all=false did not trigger assertion.'
+        mongodb_cfg_net_tls_mode: 'allowTLS'
+
+    - name: 'Converge | assert TLS password requirements'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert TLS password requirements'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_net_tls_certificate_key_file_password=test did not trigger assertion.'
+        mongodb_cfg_net_tls_certificate_key_file_password: 'test'
+
+    - name: 'Converge | assert mutually exclusive TLS certificate store'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert mutually exclusive TLS certificate store'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_net_tls_certificate_selector="subject=example.com" did not trigger assertion.'
+        mongodb_cfg_net_tls_certificate_selector: 'subject=example.com'
+        mongodb_cfg_net_tls_certificate_key_file: 'data/key.pem'
+
+    - name: 'Converge | assert mutually exclusive TLS cluster certificate store'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert mutually exclusive TLS cluster certificate store'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_net_tls_cluster_certificate_selector="subject=example.com" did not trigger assertion.'
+        mongodb_cfg_net_tls_cluster_certificate_selector: 'subject=example.com'
+        mongodb_cfg_net_tls_cluster_file: 'data/key.pem'
+
+    - name: 'Converge | assert TLS cluster password requirements'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert TLS cluster password requirements'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_net_tls_cluster_file="" did not trigger assertion.'
+        mongodb_cfg_net_tls_cluster_password: 'test'
+        mongodb_cfg_net_tls_cluster_file: ''
+
+    - name: 'Converge | assert X.509 requirements'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert X.509 requirements'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_net_tls_cluster_file="" did not trigger assertion.'
+        mongodb_cfg_security_cluster_auth_mode: 'sendX509'
+
+    - name: 'Converge | KMIP client cert disabled'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | KMIP client cert disabled'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_net_tls_cluster_file="" did not trigger assertion.'
+        mongodb_cfg_security_enable_encryption: true
+        mongodb_cfg_security_kmip_connect_timeout_ms: 500
+
+    - name: 'Converge | mongot host and search index equal'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | mongot host and search index equal'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_set_parameter_mongot_host="192.168.0.1:27028" did not trigger assertion.'
+        mongodb_cfg_set_parameter_search_index_management_host_and_port: 'localhost:27028'
+        mongodb_cfg_set_parameter_mongot_host: '192.168.0.1:27028'
+
+    - name: 'Converge | storage cache size GB or percentage'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | storage cache size GB or percentage'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_storage_wired_tiger_engine_config_cache_size_pct=10 did not trigger assertion.'
+        mongodb_cfg_storage_wired_tiger_engine_config_cache_size_gb: 10
+        mongodb_cfg_storage_wired_tiger_engine_config_cache_size_pct: 10
+
+    - name: 'Converge | storage in memory size'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | storage in memory size'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_replication_enable_majority_read_concern=false did not trigger assertion.'
+        mongodb_cfg_replication_enable_majority_read_concern: false
+
+    - name: 'Converge | sharding cluster role'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | sharding cluster role'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_replication_repl_set_name="" did not trigger assertion.'
+        mongodb_cfg_sharding_cluster_role: 'shardsvr'
+        mongodb_cfg_replication_repl_set_name: ''
+
+    - name: 'Converge | audit log destination file requirements'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | audit log destination file requirements'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_audit_log_path="" did not trigger assertion.'
+        mongodb_cfg_audit_log_destination: 'file'
+        mongodb_cfg_audit_log_path: ''
+
+    - name: 'Converge | mutually exclusive audit key file'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | mutually exclusive audit key file'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_audit_log_audit_encryption_key_identifier="test" did not trigger assertion.'
+        mongodb_cfg_audit_log_local_audit_key_file: 'data/key.pem'
+        mongodb_cfg_audit_log_audit_encryption_key_identifier: 'test'
+
+    - name: 'Converge | audit log path'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | audit log path'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_audit_log_path="/tmp" did not trigger assertion.'
+        mongodb_cfg_audit_log_destination: 'file'
+        mongodb_cfg_audit_log_path: '/tmp'
+
+    - name: 'Converge | gRPC key file'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | gRPC key file'
+        test_role: 'r_pufky.srv.mongodb'
+        test_fail_message:
+          'mongodb_cfg_audit_log_path="/tmp" did not trigger assertion.'
+        mongodb_cfg_server_grpc_tls_certificate_key_file: 'data/key.pem'
+        mongodb_cfg_server_grpc_tls_mode: 'disabled'

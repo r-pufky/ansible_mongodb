@@ -1,0 +1,171 @@
+---
+###############################################################################
+# Storage (storage)
+###############################################################################
+# Reference:
+# * https://www.mongodb.com/docs/manual/reference/configuration-options
+
+# Mongod data storage location. Default: '/var/lib/mongodb'.
+mongodb_cfg_storage_db_path: '/var/lib/mongodb'
+
+# Mongot data storage location (index data, catalog). Default: '' (disabled).
+mongodb_cfg_storage_data_path: ''
+
+# Journal commit interval (ms).
+#
+# Special Case:
+# * WiredTiger default journal commit interval is 100ms.
+# * Not available for mongod instances that use in-memory storage engine.
+#
+# Values:
+#   1-100: Time in milliseconds between journal commits.
+#
+# Default: 100.
+mongodb_cfg_storage_journal_commit_interval_ms: 100
+
+# Enable separate directory for each database?
+#
+# Directories created are under mongodb_cfg_storage_db_path, and each name
+# corresponds to database name.
+#
+# Special Case:
+# * Not available for mongod instances that use the in-memory storage engine.
+#
+# Default: False.
+mongodb_cfg_storage_directory_per_db: false
+
+# Time in seconds before flushing data to files.
+#
+# Do NOT set this value on production systems. In almost every situation, you
+# should use the default setting.
+#
+# Mongod writes data very quickly to journal and lazily to data files.
+# mongodb_cfg_storage_sync_period_secs has no effect on journaling, but if set
+# to 0 the journal eventually consumes all available disk space.
+#
+# Special Case:
+# * Not available for mongod instances that use the in-memory storage engine.
+#
+# Default: 60 (seconds).
+mongodb_cfg_storage_sync_period_secs: 60
+
+# Storage engine for mongod database.
+#
+# Only available for Enterprise licenses.
+#
+# Values:
+#   wiredTiger: Use WiredTiger.
+#     inMemory: Use In-Memory Storage Engine for Self-Managed Deployments.
+#
+# Default: 'wiredTiger'.
+mongodb_cfg_storage_engine: 'wiredTiger'
+
+# Minimum number of hours to preserve an oplog entry.
+#
+# Values:
+#   {#.#}: Decimal values represent fractions of an hour (e.g. 1.5 represents
+#          one hour and thirty minutes).
+#       0: Truncate oplog starting with oldest entries to maintain configured
+#          maximum oplog size.
+#
+# Default: 0.0
+mongodb_cfg_storage_oplog_min_retention_hours: 0.0
+
+# Maximum size of internal cache WiredTiger uses for all data (GB).
+#
+# Mutually exclusive with
+# mongodb_cfg_storage_wired_tiger_engine_config_cache_size_pct.
+#
+# Index build memory consumption is separate from WiredTiger cache memory.
+# Avoid increasing WiredTiger internal cache size above default value. Instead
+# use mongodb_cfg_storage_wired_tiger_engine_config_cache_size_pct to specify a
+# percentage of up to 80% of available memory. The default WiredTiger internal
+# cache size is the larger of either: 50% of (RAM - 1 GB), or 256 MB.
+#
+# Values:
+#   -1: Larger of 50% of (RAM - 1 GB) or 256 MB (default).
+#    #: Use explicit size in GB.
+#
+# Default: -1 (automatic).
+mongodb_cfg_storage_wired_tiger_engine_config_cache_size_gb: -1
+
+# Maximum memory to allocate for cache as a percentage of physical RAM.
+#
+# Mutually exclusive with
+# mongodb_cfg_storage_wired_tiger_engine_config_cache_size_gb.
+#
+# Index build memory consumption is separate from WiredTiger cache memory.
+# Avoid increasing WiredTiger internal cache size above default value. Instead
+# use mongodb_cfg_storage_wired_tiger_engine_config_cache_size_pct to specify a
+# percentage of up to 80% of available memory. The default WiredTiger internal
+# cache size is the larger of either: 50% of (RAM - 1 GB), or 256 MB.
+#
+# Container database memory constraints may be than total system memory. This
+# memory limit rather than total system memory is used as the maximum RAM
+# available. Set this value less than the amount of RAM available in container.
+#
+# Values:
+#   -1: Larger of 50% of (RAM - 1 GB) or 256 MB (default).
+#    #: Use explicit size as a percentage of available RAM.
+#
+# Default: -1
+mongodb_cfg_storage_wired_tiger_engine_config_cache_size_pct: -1
+
+# Compression for WiredTiger journal data.
+#
+# Values:
+#   snappy: Prioritize high speed over maximum compression ratio (Google).
+#     zlib: Widely used general-purpose, lossless data-compression library.
+#     zstd: Fast lossless real-time compression algorithm (Facebook).
+#     none: Disable compression.
+#
+# Default: 'snappy'.
+mongodb_cfg_storage_wired_tiger_engine_config_journal_compressor: 'snappy'
+
+# Enable index and collection in separate directories?
+#
+# Symbolic links are supported to link these separate directories to other
+# locations.
+#
+# Default: False.
+mongodb_cfg_storage_wired_tiger_engine_config_directory_for_indexes: false
+
+# zstd compression level.
+#
+# Values:
+#   <0: Negative values provide faster compression and decompression speeds
+#       at the cost of compression ratio. Max -7.
+#    0: Use zstd internal default value of 3.
+#   >0: Positive values specify higher compression level at the cost of slower
+#       compression and decompression speeds. Max 22.
+#
+# Default: 6.
+mongodb_cfg_storage_wired_tiger_engine_config_zstd_compression_level: 6
+
+# Compression for WiredTiger collection data.
+#
+# Values:
+#   snappy: Prioritize high speed over maximum compression ratio (Google).
+#     zlib: Widely used general-purpose, lossless data-compression library.
+#     zstd: Fast lossless real-time compression algorithm (Facebook).
+#     none: Disable compression.
+#
+# Default: 'snappy'.
+mongodb_cfg_storage_wired_tiger_collection_config_block_compressor: 'snappy'
+
+# Enable prefix compression for index data? Default: True.
+mongodb_cfg_storage_wired_tiger_index_config_prefix_compression: true
+
+# Maximum amount of memory to allocate for in-memory storage engine data (GB).
+#
+# Only available for Enterprise licenses.
+#
+# Includes: indexes, oplog if the mongod is part of replica set, replica set or
+# sharded cluster metadata, etc.
+#
+# Values:
+#   -1: 50% of (RAM - 1 GB).
+#    #: Use explicit size in GB.
+#
+# Default: -1 (automatic).
+mongodb_cfg_storage_in_memory_engine_config_in_memory_size_gb: -1

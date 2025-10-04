@@ -1,0 +1,64 @@
+---
+- name: 'Verify'
+  hosts: 'all'
+  gather_facts: false
+  become: true
+  tasks:
+    - name: 'Verify | /etc/mongod.conf'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'copy.yml'
+      vars:
+        test_name: 'Verify | /etc/mongod.conf'
+        test_src: 'files/mongod.conf'
+        test_file: '/etc/mongod.conf'
+        test_owner: 'root'
+        test_group: 'root'
+        test_mode: '0644'
+        test_state: 'file'
+        test_diff: true
+
+    - name: 'Verify | /etc/mongodb'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'file.yml'
+      vars:
+        test_name: 'Verify | /etc/mongodb'
+        test_file: '{{ "/etc/mongodb/" ~ item }}'
+        test_owner: 'root'
+        test_group: 'root'
+        test_mode: '0755'
+        test_state: 'directory'
+        test_diff: true
+      loop:
+        - 'tls'
+        - 'security'
+        - 'audit'
+        - 'replica'
+        - 'grpc'
+
+    - name: 'Verify | /data/mongodb/backup'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'file.yml'
+      vars:
+        test_name: 'Verify | /data/mongodb/backup'
+        test_file: '/data/mongodb/backup'
+        test_owner: 'mongodb'
+        test_group: 'mongodb'
+        test_mode: '0750'
+        test_state: 'directory'
+        test_diff: true
+
+    - name: 'Verify | /data/mongodb/backup/mongodb_backup'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'file.yml'
+      vars:
+        test_name: 'Verify | /data/mongodb/backup/mongodb_backup'
+        test_file: '/data/mongodb/backup/mongodb_backup'
+        test_owner: 'mongodb'
+        test_group: 'mongodb'
+        test_mode: '0750'
+        test_state: 'file'
+        test_diff: true

@@ -1,0 +1,57 @@
+---
+###############################################################################
+# Server (server)
+###############################################################################
+# Reference:
+# * https://www.mongodb.com/docs/manual/reference/configuration-options
+
+# Listen address for gRPC server.
+#
+# It may be necessary to bind mongot query server to an interface accessible
+# from MongoDb Cluster.
+#
+# Values:
+#   {HOST|IP}:{PORT}: Hostname or IP with port (e.g. localhost:27028).
+#
+# Default: '' (disabled).
+mongodb_cfg_server_grpc_address: ''
+
+# gRPC server TLS mode.
+#
+# Values:
+#        TLS: TLS authentication.
+#       mTLS: Mutual TLS authentication.
+#   disabled: Disable (default).
+#
+# Default: 'disabled'.
+mongodb_cfg_server_grpc_tls_mode: 'disabled'
+
+# X.509 certificate for mongot using PKCS#8 private key (PEM).
+#
+# Requires mongodb_cfg_server_grpc_tls_mode=TLS|mTLS.
+#
+# Validated using mongodb_cfg_server_grpc_tls_ca_file.
+#
+# Sourced from ansible controller; automatically placed in
+# /etc/mongodb/grpc/key.pem with correct permissions.
+#
+# mongodb_cfg_server_grpc_tls_certificate_key_file:
+#   'host_vars/db.example.com/data/key.pem'
+#
+# Default: '' (disabled).
+mongodb_cfg_server_grpc_tls_certificate_key_file: ''
+
+# X.509 CA certificate to verify mongod (PEM).
+#
+# Requires mongodb_cfg_server_grpc_tls_mode=TLS|mTLS.
+#
+# Validates against mongodb_cfg_server_grpc_tls_certificate_key_file.
+#
+# Sourced from ansible controller; automatically placed in
+# /etc/mongodb/grpc/ca.pem with correct permissions.
+#
+# mongodb_cfg_server_grpc_tls_ca_file:
+#   'host_vars/db.example.com/data/ca.pem'
+#
+# Default: '' (disabled).
+mongodb_cfg_server_grpc_tls_ca_file: ''

@@ -1,0 +1,315 @@
+---
+###############################################################################
+# Net (net)
+###############################################################################
+# Reference:
+# * https://www.mongodb.com/docs/manual/reference/configuration-options
+
+# TCP Service Port.
+#
+# Values:
+#       0: Use random port.
+#   27017: Well-known mongod (not shard or config member) or mongos instance
+#          (default).
+#   27018: Well-known mongod shard member.
+#   27019: Well-known mongod config member.
+#   65535: Max port.
+#
+# Default: 27017 (mongod).
+mongodb_cfg_net_port: 27017
+
+# List of IP/Unix sockets to listen for client connections.
+#
+# Mutually exclusive with mongodb_cfg_net_bind_ip_all.
+#
+# Special Case:
+# * Cluster nodes only configured with IP address fail validation and do not
+#   start. Requires manually using '--disableSplitHorizonIPCheck=true' to
+#   modify nodes that cannot be updated to use host names. Does NOT apply to
+#   mongod, mongos instances but will log warnings.
+#
+# Values:
+#     {DNS}: Bind to specified DNS hostname. Use for configuring replicia set
+#            members or sharded cluster members. Allows for use of split DNS
+#    {IPv4}: IPv4 address.
+#    {IPv6}: IPv6 address. Does not enable IPv6 support automatically. Requires
+#            mongodb_cfg_net_ipv6=true. Link-local IPv6 address require zone
+#            index (e.g. fe80::<address>%<adapter-name>).
+#    {PATH}: Path to unix socket (e.g. /tmp/mongod.sock).
+#   0.0.0.0: Bind to all IPv4 addresses.
+#      '::': Bind to all IPv6 addresses.
+#         *: Bind to all IPv4/IPv6 addresses. Prefer
+#            mongodb_cfg_net_bind_ip_all.
+#
+# Default:
+#   - '127.0.0.1' (localhost)
+#
+# Reference:
+# * https://www.mongodb.com/docs/manual/core/security-mongodb-configuration/
+mongodb_cfg_net_bind_ip:
+  - '127.0.0.1'
+
+# Bind to all available IPv4/IPv6 interfaces? Default: False (disabled).
+mongodb_cfg_net_bind_ip_all: false
+
+# Max number of simultaneous incoming connections.
+#
+# Prevents mongos from causing connection spikes on individual shards. Allows a
+# client creating multiple connections to timeout rather than closing them.
+# Errors may occur if value is set too low.
+#
+# Special Case:
+# * Setting above (RLIMIT_NOFILE / 2) * 0.8 will hard cap at formula.
+# * RLIMIT_NOFILE Trixie default is 1024:524288.
+#
+# Default: 209714.
+mongodb_cfg_net_max_incoming_connections: 209714
+
+# Enable BSON object validation before database insert? Default: True.
+mongodb_cfg_net_wire_object_check: true
+
+# Enable IPv6 support? Default: False.
+mongodb_cfg_net_ipv6: false
+
+# Enable listening on Unix domain socket?
+#
+# mongod/mongos always listens on Unix socket unless:
+# * mongodb_net_unix_domain_socket_enabled=false
+# * '--nounixsocket' is used.
+# * mongodb_net_bind_ip=[].
+# * mongodb_net_bind_ip != localhost or associated localhost IP addresses.
+#
+# Default: True.
+mongodb_cfg_net_unix_domain_socket_enabled: true
+
+# Unix socket path. Default: '/tmp'.
+mongodb_cfg_net_unix_domain_socket_path_prefix: '/tmp'
+
+# Unix socket file permissions octal. Default: '0700'.
+mongodb_cfg_net_unix_domain_socket_file_permissions: '0700'
+
+# Enable TLS for all network connections?
+#
+# Requires:
+# * mongodb_cfg_net_tls_use_system_ca=true or mongdb_cfg_net_tls_ca_file set.
+#
+# Values
+#     disabled: Do not use TLS.
+#     allowTLS: Connections between servers do not use TLS. Server accepts both
+#               TLS and non-TLS for incoming connections.
+#    preferTLS: Connections between servers use TLS. Server accepts both TLS
+#               and non-TLS for incoming connections.
+#   requireTLS: Server uses and accepts only TLS encrypted connections.
+#
+# Default: 'disabled'.
+mongodb_cfg_net_tls_mode: 'disabled'
+
+# TLS certificate and key (PEM format).
+#
+# Mutually exclusive with mongodb_cfg_net_tls_certificate_selector.
+#
+# Sourced from ansible controller; automatically placed in
+# /etc/mongodb/tls/key.pem with correct permissions.
+#
+# mongodb_cfg_net_tls_certificate_key_file:
+#   'host_vars/db.example.com/data/key.pem'
+#
+# Default: '' (disabled).
+mongodb_cfg_net_tls_certificate_key_file: ''
+
+# TLS certificate and key file password.
+#
+# Requires mongodb_cfg_net_tls_certificate_key_file set.
+#
+# Use only if mongodb_cfg_net_tls_certificate_key_file requires a password.
+#
+# Default: '' (disabled).
+mongodb_cfg_net_tls_certificate_key_file_password: ''
+
+# TLS certificate property to match for selecting certificate to use.
+#
+# Mutually exclusive with mongodb_cfg_net_tls_certificate_key_file.
+#
+# Values:
+#      subject={VALUE}: Subject or common name on certificate.
+#   thumbprint={VALUE}: (fingerprint) Hexadecimal SHA1 public key digest.
+#
+# mongodb_cfg_net_tls_certificate_selector: 'subject=example.com'
+#
+# Default: '' (disabled).
+mongodb_cfg_net_tls_certificate_selector: ''
+
+# Cluster TLS certificate property to match for internal authentication.
+#
+# Mutually exclusive with mongodb_cfg_net_tls_cluster_file.
+#
+# Values:
+#      subject={VALUE}: Subject or common name on certificate.
+#   thumbprint={VALUE}: (fingerprint) Hexadecimal SHA1 public key digest.
+#
+# mongodb_cfg_net_tls_certificate_selector: 'subject=example.com'
+#
+# Default: '' (disabled).
+mongodb_cfg_net_tls_cluster_certificate_selector: ''
+
+# Cluster TLS certificate and key (PEM format).
+#
+# Mutually exclusive with mongodb_cfg_net_tls_cluster_certificate_selector.
+#
+# Sourced from ansible controller; automatically placed in
+# /etc/mongodb/tls/cluster.pem with correct permissions.
+#
+# mongodb_cfg_net_tls_cluster_file:
+#   'host_vars/db.example.com/data/cluster.pem'
+#
+# Default: '' (disabled).
+mongodb_cfg_net_tls_cluster_file: ''
+
+# Cluster TLS certificate and key file password.
+#
+# Requires mongodb_cfg_net_tls_cluster_file set.
+#
+# Use only if mongodb_cfg_net_tls_cluster_file requires a password.
+#
+# Default: '' (disabled).
+mongodb_cfg_net_tls_cluster_password: ''
+
+# Cluster TLS certificate and key file password.
+#
+# Specifies a set of X.509 Distinguished Name (DN) attributes and values that
+# the server expects cluster member nodes to contain in their certificate
+# subject names. This lets you use certificates that don't contain DC, O, and
+# OU values to authenticate cluster members.
+#
+# When attributes is set, MongoDB matches certificates using the DN and ignores
+# extension values.
+#
+# Default: '' (disabled).
+mongodb_cfg_net_tls_cluster_auth_x509_attributes: ''
+
+# Cluster TLS certificate and key file password.
+#
+# Specifies an extension value that corresponds to the MongoDB cluster
+# membership extension OID, 1.3.6.1.4.1.34601.2.1.2. The server expects cluster
+# member nodes to contain this extension in their certificates. This lets you
+# use certificates that don't contain DC, O, and OU values to authenticate
+# cluster members.
+#
+# When you set extensionValue, MongoDB matches certificates using certificate
+# extension values and ignores the Distinguished Name (DN).
+#
+# Default: '' (disabled).
+mongodb_cfg_net_tls_cluster_auth_x509_extension_value: ''
+
+# Root certificate chain from certificate authority (CA).
+#
+# Sourced from ansible controller; automatically placed in
+# /etc/mongodb/tls/ca.pem with correct permissions.
+#
+# mongodb_cfg_net_tls_ca_file:
+#   'host_vars/db.example.com/data/ca.pem'
+#
+# Default: '' (disabled).
+mongodb_cfg_net_tls_ca_file: ''
+
+# Cluster root certificate chain from certificate authority (CA).
+#
+# Sourced from ansible controller; automatically placed in
+# /etc/mongodb/tls/cluster_ca.pem with correct permissions.
+#
+# mongodb_cfg_net_tls_cluster_ca_file:
+#   'host_vars/db.example.com/data/cluster_ca.pem'
+#
+# Default: '' (disabled).
+mongodb_cfg_net_tls_cluster_ca_file: ''
+
+# Certificate revocation list (CRL) file.
+#
+# Sourced from ansible controller; automatically placed in
+# /etc/mongodb/tls/crl.pem with correct permissions.
+#
+# mongodb_cfg_net_tls_crl_file:
+#   'host_vars/db.example.com/data/crl.pem'
+#
+# Default: '' (disabled).
+mongodb_cfg_net_tls_crl_file: ''
+
+# Disable client TLS certificate requirement?
+#
+# Values:
+#   False: All clients must provide client TLS certificates.
+#    True: clients do not need to provide client certificates, but mongod or
+#          mongos encrypts TLS/SSL connection.
+#
+# Default: False (require client TLS certificates).
+mongodb_cfg_net_tls_allow_connections_without_certificates: false
+
+# Allow invalid certificates?
+#
+# Special Case:
+# * Using X.509 authentication an invalid certificate is only sufficient to
+#   establish a TLS connection but is insufficient for authentication. A
+#   warning will always be logged.
+#
+# Default: False (require valid certificates).
+mongodb_cfg_net_tls_allow_invalid_certificates: false
+
+# Allow invalid hostnames?
+#
+# Disables validation of hostnames in TLS certificates. Allows mongod or mongos
+# to connect to other MongoDB instances in cluster, even if hostname of their
+# certificates does not match specified hostname.
+#
+# Default: False (require valid hostnames).
+mongodb_cfg_net_tls_allow_invalid_hostnames: false
+
+# Disabled TLS protocols.
+#
+# Values:
+#   TLS1_0: Disable TLS 1.0. Automatically disabled if TLS 1.1+ is supported on
+#           system.
+#   TLS1_1: Disable TLS 1.1.
+#   TLS1_2: Disable TLS 1.2.
+#   TLS1_3: Disable TLS 1.3.
+#     none: Enable all TLS protocols, including TLS 1.0.
+#
+# Default: [] (auto disable TLS 1.0 if TLS 1.1 is supported).
+mongodb_cfg_net_tls_disabled_protocols: []
+
+# Enable use of FIPS mode in TLS library.
+#
+# Only available for Enterprise licenses.
+#
+# Default: False (disabled).
+mongodb_cfg_net_tls_fips_mode: false
+
+# Log message when a client connects using specified TLS versions.
+#
+# Values:
+#   TLS1_0: Log TLS 1.0 client connections.
+#   TLS1_1: Log TLS 1.1 client connections.
+#   TLS1_2: Log TLS 1.2 client connections.
+#   TLS1_3: Log TLS 1.3 client connections.
+#
+# Default: [] (disabled).
+mongodb_cfg_net_tls_log_versions: []
+
+# Network compression for communication between mongod/mongos/cluster nodes.
+#
+# Special Case:
+# * Highest preference first.
+#
+# Values:
+#     snappy: Prioritize high speed over maximum compression ratio (Google).
+#       zlib: Widely used general-purpose, lossless data-compression library.
+#       zstd: Fast lossless real-time compression algorithm (Facebook).
+#   disabled: Disable network compression.
+#
+# Default:
+#  - 'snappy'
+#  - 'zstd'
+#  - 'zlib'
+mongodb_cfg_net_compression_compressors:
+  - 'snappy'
+  - 'zstd'
+  - 'zlib'

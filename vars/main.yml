@@ -1,0 +1,109 @@
+---
+# yamllint disable rule:line-length
+###############################################################################
+# Default MangoDB Role Options
+###############################################################################
+#
+# Updates:
+# * New MAJOR, MINOR releases should hard branch at version before starting
+#   (e.g. 2.14.x branch).
+# * Keep a separate change log as changes are made, you will not remember all
+#   of them.
+# * Use bare-metal docs to validate package/process changes.
+# * Update role defaults (includes updating defaults, tasks):
+#   * Use configuration docs to add new variables.
+#
+#       meld \
+#         <(curl -s https://www.mongodb.com/docs/manual/reference/configuration-options)
+#         <(curl -s https://www.mongodb.com/docs/v7.0/reference/configuration-options)
+#
+#   * Use defaults/ to remove any changed/deprecated variables.
+#
+# * Update tests for any changes.
+# * Standard role validation testing (yamllint, ansible-lint, todo, noqa).
+# * Tag with OS-APP-ROLE version.
+#
+# Reference:
+# * https://www.mongodb.com/docs/manual/administration/install-community
+# * https://www.mongodb.com/docs/manual/reference/configuration-options
+# yamllint enable rule:line-length
+
+# Last time MongoDB options were validated against default configuration.
+mongodb_role_validate_date: '2025-10-04'
+mongodb_role_validate_release: 'trixie'
+mongodb_role_validate_version: '8.2'
+
+###############################################################################
+# APT Packages
+###############################################################################
+# Thought the suite specifies 'bookworm', MongoDB 8.x+ supports trixie via this
+# repository.
+#
+# Debian 13+ removed MongoDB from repository due to licensing issues - add
+# additional sources as we are already breaking base Debian licensing premise.
+#
+# Reference:
+# * https://www.mongodb.com/docs/manual/administration/install-community
+
+mongodb_role_packages:
+  - 'mongodb-org'
+
+mongodb_role_apt_sources:
+  - name: 'mongodb-8.2'
+    types:
+      - 'deb'
+    uris: 'http://repo.mongodb.org/apt/debian'
+    suites:
+      - 'bookworm/mongodb-org/{{ mongodb_srv_version }}'
+    components:
+      - 'main'
+    signed_by: 'https://www.mongodb.org/static/pgp/server-8.0.asc'
+  - name: 'debian'
+    types:
+      - 'deb'
+      - 'deb-src'
+    uris: 'http://deb.debian.org/debian'
+    suites:
+      - 'trixie'
+      - 'trixie-updates'
+      - 'trixie-backports'
+    components:
+      - 'main'
+      - 'contrib'
+      - 'non-free'
+      - 'non-free-firmware'
+    signed_by: '/usr/share/keyrings/debian-archive-keyring.gpg'
+  - name: 'debian-security'
+    types:
+      - 'deb'
+      - 'deb-src'
+    uris: 'http://deb.debian.org/debian-security'
+    suites:
+      - 'trixie-security'
+    components:
+      - 'main'
+      - 'contrib'
+      - 'non-free'
+      - 'non-free-firmware'
+    signed_by: '/usr/share/keyrings/debian-archive-keyring.gpg'
+
+###############################################################################
+# Default MongoDB User/Group
+###############################################################################
+
+mongodb_role_group:
+  name: 'mongodb'
+  gid: 302
+
+mongodb_role_user:
+  name: 'mongodb'
+  group: 'mongodb'
+  uid: 302
+  shell: '/usr/sbin/nologin'
+  home: '/nonexistent'
+  create_home: false
+  password: '!'
+  password_lock: true
+  update_password: 'always'
+  expires: -1
+  system: true

@@ -1,0 +1,61 @@
+---
+# yamllint disable rule:line-length
+###############################################################################
+# Set Parameter (setParameter)
+###############################################################################
+# Reference:
+# * https://www.mongodb.com/docs/manual/reference/configuration-options
+
+# Search index management host address.
+#
+# Requires same value as mongodb_cfg_set_parameter_mongot_host.
+#
+# Values:
+#   {HOST|IP}:{PORT}: Hostname or IP with port (e.g. localhost:27028).
+#
+# Default: ''.
+mongodb_cfg_set_parameter_search_index_management_host_and_port: ''
+
+# Enable authentication skip to search index management server?
+#
+# Authentication is skipped even if enabled. Highly recommend disabling.
+#
+# Default: True.
+mongodb_cfg_set_parameter_skip_authentication_to_search_index_management_server: true
+
+# Mongot host address.
+#
+# Requires same value as
+# mongodb_cfg_set_parameter_search_index_management_host_and_port.
+#
+# Values:
+#   {HOST|IP}:{PORT}: Hostname or IP with port (e.g. localhost:27028).
+#
+# Default: ''.
+mongodb_cfg_set_parameter_mongot_host: ''
+
+# Enable authentication skip to mongot connections?
+#
+# Authentication is skipped even if enabled. Highly recommend disabling.
+#
+# Default: False.
+mongodb_cfg_set_parameter_skip_authentication_to_mongot: false
+
+# Enable gRPC communication shard to mongot communication?
+#
+# Must be enabled if using mongot.
+#
+# Default: False.
+mongodb_cfg_set_parameter_use_grpc_for_search: false
+
+# Set TLS mode for mongod to mongot connection.
+#
+# Values:
+#    globalTLS: Use value from mongodb_cfg_net_tls_mode (default).
+#     disabled: Disable TLS.
+#     allowTLS: Allow TLS.
+#    preferTLS: Prefer TLS.
+#   requireTLS: Require TLS.
+#
+# Default: 'globalTLS' (user mongodb_cfg_net_tls_mode).
+mongodb_cfg_set_parameter_search_tls_mode: 'globalTLS'

@@ -1,0 +1,120 @@
+---
+###############################################################################
+# MongoDB Role Configuration
+###############################################################################
+# MongoDB 5.0+ requires AVX CPU extensions. Debian updates, backports, contrib,
+# non-free* repositories are added automatically.
+#
+# Database version upgrades are currently not supported and must be done
+# manually (or export the database and import the database via the role).
+#
+# Install size: ~675MB
+#     MongoDB: ~675MB.
+
+# MongoDB Release.
+#
+# Changing versions requires explicit upgrades through each version, including
+# DB import, upgrade, and export; e.g. 4.4 → 5.0 → 6.0 → 7.0 → 8.0.
+#
+# Versions (Schematic):
+#       MAJOR: Unsafe - requires major role changes; only default version is
+#              supported; older versions may be used at the risk of missing
+#              dependencies or configuration parameters that are not supported.
+#              See other branches if they exist.
+#       MINOR: Safe - New functionality may not be properly supported in
+#              configuration.
+#       PATCH: Safe - Usually requires no role updates.
+#   RECOMMEND: Only use latest stable release.
+#
+# Values:
+#   8.2: Latest stable release (default).
+#   7.0: 7.x release.
+#
+# Default: '8.2'.
+#
+# Reference:
+# * https://www.mongodb.com/docs/manual/administration/install-community
+# * https://www.mongodb.com/docs/manual/release-notes/8.0-upgrade-standalone
+mongodb_srv_version: '8.2'
+
+# Enable fatal version mis-matches?
+#
+# Stop role execution if requested version does not match role supported
+# MAJOR.MINOR version. 'latest' will always trigger version mismatch.
+#
+# Default: True.
+mongodb_srv_fatal_version_enable: true
+
+###############################################################################
+# Backup
+###############################################################################
+
+# Enable backups?
+#
+# All data in mongodb_cfg_storage_db_path, mongodb_cfg_storage_data_path will
+# be compressed.
+#
+# Default: True.
+mongodb_srv_backup_enable: false
+
+# Backup location.
+#
+# Directory will be created with root permissions.
+#
+# Default: '/data/mongodb/backup'.
+mongodb_srv_backup_dir: '/data/mongodb/backup'
+
+# Backup file owner. Default: 'root'.
+mongodb_srv_backup_owner: 'root'
+
+# Backup file group. Default: 'root'.
+mongodb_srv_backup_group: 'root'
+
+# Set backup schedule.
+#
+# Uses systemd TIME specification.
+#
+# Default: 'weekly'
+#
+# Reference:
+# * https://www.freedesktop.org/software/systemd/man/latest/systemd.time.html
+mongodb_srv_backup_schedule: 'weekly'
+
+###############################################################################
+# MongoDB User
+###############################################################################
+
+# User that MongoDB will run under.
+#
+# Enable mongodb_srv_create_user if this account is not externally managed.
+#
+# Default: 'mongodb'.
+mongodb_srv_user: 'mongodb'
+
+# Group that MongoDB will run under.
+#
+# Enable mongodb_srv_create_user if this group is not externally managed.
+#
+# Default: 'mongodb'.
+mongodb_srv_group: 'mongodb'
+
+# Create mongodb_srv_user, mongodb_srv_group if not detected?
+#
+# Applied via r_pufky.deb.users, see vars/main.yml for default user attributes.
+#
+# Default: True.
+mongodb_srv_create_user: true
+
+# Enable user management of data/media files?
+#
+# Use mongodb_srv_user to execute data/media management commands. Role applies
+# media permissions using 'root' by default. For mounted data locations (NFS
+# with squashed mounts, mapped container mounts, etc) the local root user will
+# not have sufficient privileges to modify these files.
+#
+# Applies to:
+# * mongodb_cfg_storage_db_path
+# * mongodb_cfg_storage_data_path
+#
+# Default: False.
+mongodb_srv_user_data_manage_enable: false

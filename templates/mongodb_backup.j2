@@ -1,0 +1,13 @@
+#!/bin/bash
+#
+# Backup & compress MongoDB storage.
+#
+set -e
+DATE_STAMP=`date +%Y-%m-%d`
+OWNER='{{ _mongodb_srv_backup_owner.raw }}'
+GROUP='{{ _mongodb_srv_backup_group.raw }}'
+TARGET="{{ _mongodb_srv_backup_dir.raw }}/${DATE_STAMP}.tar.xz"
+
+tar -I "xz -9" -cf "${TARGET}" "{{ _mongodb_cfg_storage_db_path.raw }}" {% if _mongodb_cfg_storage_data_path.raw | length > 0 %}"{{ _mongodb_cfg_storage_data_path.raw }}"{% endif %} 2>/dev/null
+chown ${OWNER}:${GROUP} "${TARGET}" 2>/dev/null || true
+chmod o-rwx "${TARGET}" 2>/dev/null || true

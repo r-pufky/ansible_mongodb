@@ -1,0 +1,20 @@
+---
+- name: 'Converge'
+  hosts: 'all'
+  gather_facts: true  # /proc AVX detection.
+  become: true
+  tasks:
+    - name: 'Prepare | simulate user media restriction'
+      ansible.builtin.file:
+        path: '{{ item }}'
+        owner: 302
+        group: 302
+        mode: '0755'
+        state: 'directory'
+      loop:
+        - '/data/mongodb'
+        - '/var/lib/mongodb'
+
+    - name: 'Converge | apply r_pufky.srv.mongodb'
+      ansible.builtin.include_role:
+        name: 'r_pufky.srv.mongodb'

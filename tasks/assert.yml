@@ -1,0 +1,426 @@
+---
+# yamllint disable rule:line-length
+###############################################################################
+# Assert Settings
+###############################################################################
+# Sanity check options to stop preventable errors and accidental data deletion.
+
+# Explicitly check for defaults/disabled enterprise options until supported.
+- name: 'Assert | enterprise features disabled'
+  when: mongodb_srv_fatal_version_enable
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - 'not mongodb_cfg_net_tls_fips_mode'
+      - 'not mongodb_cfg_security_redact_client_log_data'
+      - 'not mongodb_cfg_security_enable_encryption'
+      - 'mongodb_cfg_security_encryption_cipher_mode == "AES256-CBC"'
+      - 'mongodb_cfg_security_encryption_key_file | length == 0'
+      - 'mongodb_cfg_security_kmip_key_identifier | length == 0'
+      - 'not mongodb_cfg_security_kmip_rotate_master_key'
+      - 'mongodb_cfg_security_kmip_server_name | length == 0'
+      - 'mongodb_cfg_security_kmip_port == 5696'
+      - 'mongodb_cfg_security_kmip_client_certificate_file | length == 0'
+      - 'mongodb_cfg_security_kmip_client_certificate_password | length == 0'
+      - 'mongodb_cfg_security_kmip_client_certificate_selector | length == 0'
+      - 'mongodb_cfg_security_kmip_connect_retries == 0'
+      - 'not mongodb_cfg_security_kmip_key_use_legacy_protocol'
+      - 'mongodb_cfg_security_sasl_service_name | length == 0'
+      - 'mongodb_cfg_storage_engine == "wiredTiger"'
+      - 'mongodb_cfg_storage_in_memory_engine_config_in_memory_size_gb == -1'
+      - 'mongodb_cfg_audit_log_audit_encryption_key_identifier | length == 0'
+      - 'mongodb_cfg_audit_log_destination | length == 0'
+      - 'mongodb_cfg_audit_log_filter | length == 0'
+      - 'mongodb_cfg_audit_log_format | length == 0'
+      - 'mongodb_cfg_audit_log_local_audit_key_file | length == 0'
+      - 'not mongodb_cfg_audit_log_runtime_configuration'
+      - 'mongodb_cfg_audit_log_schema == "mongo"'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                Enterprise features not supported.                 │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Role does not currently support enterprise installations, and
+      │ enterprise features were enabled.
+      │
+      │ mongodb_cfg_net_tls_fips_mode: {{ mongodb_cfg_net_tls_fips_mode }}
+      │ mongodb_cfg_security_redact_client_log_data: {{ mongodb_cfg_security_redact_client_log_data }}
+      │ mongodb_cfg_security_enable_encryption: {{ mongodb_cfg_security_enable_encryption }}
+      │ mongodb_cfg_security_encryption_cipher_mode: {{ mongodb_cfg_security_encryption_cipher_mode }}
+      │ mongodb_cfg_security_encryption_key_file: {{ mongodb_cfg_security_encryption_key_file }}
+      │ mongodb_cfg_security_kmip_key_identifier: {{ mongodb_cfg_security_kmip_key_identifier }}
+      │ mongodb_cfg_security_kmip_rotate_master_key: {{ mongodb_cfg_security_kmip_rotate_master_key }}
+      │ mongodb_cfg_security_kmip_server_name: {{ mongodb_cfg_security_kmip_server_name }}
+      │ mongodb_cfg_security_kmip_port: {{ mongodb_cfg_security_kmip_port }}
+      │ mongodb_cfg_security_kmip_client_certificate_file: {{ mongodb_cfg_security_kmip_client_certificate_file }}
+      │ mongodb_cfg_security_kmip_client_certificate_password: {{ mongodb_cfg_security_kmip_client_certificate_password }}
+      │ mongodb_cfg_security_kmip_client_certificate_selector: {{ mongodb_cfg_security_kmip_client_certificate_selector }}
+      │ mongodb_cfg_security_kmip_connect_retries: {{ mongodb_cfg_security_kmip_connect_retries }}
+      │ mongodb_cfg_security_kmip_key_use_legacy_protocol: {{ mongodb_cfg_security_kmip_key_use_legacy_protocol }}
+      │ mongodb_cfg_security_sasl_service_name: {{ mongodb_cfg_security_sasl_service_name }}
+      │ mongodb_cfg_storage_engine: {{ mongodb_cfg_storage_engine }}
+      │ mongodb_cfg_storage_in_memory_engine_config_in_memory_size_gb: {{ mongodb_cfg_storage_in_memory_engine_config_in_memory_size_gb }}
+      │ mongodb_cfg_audit_log_audit_encryption_key_identifier: {{ mongodb_cfg_audit_log_audit_encryption_key_identifier }}
+      │ mongodb_cfg_audit_log_destination: {{ mongodb_cfg_audit_log_destination }}
+      │ mongodb_cfg_audit_log_filter: {{ mongodb_cfg_audit_log_filter }}
+      │ mongodb_cfg_audit_log_format: {{ mongodb_cfg_audit_log_format }}
+      │ mongodb_cfg_audit_log_local_audit_key_file: {{ mongodb_cfg_audit_log_local_audit_key_file }}
+      │ mongodb_cfg_audit_log_runtime_configuration: {{ mongodb_cfg_audit_log_runtime_configuration }}
+      │ mongodb_cfg_audit_log_schema: {{ mongodb_cfg_audit_log_schema }}
+
+- name: 'Assert | systemd PID'
+  ansible.builtin.assert:
+    quiet: true
+    that: 'mongodb_cfg_process_management_pid_file_path | length == 0'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                     Systemd does not use PID.                     │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Systemd manages PID; a PID file is not required and may lead to
+      │ non-deterministic behavior.
+      │
+      │ mongodb_cfg_process_management_pid_file_path: {{ mongodb_cfg_process_management_pid_file_path }}
+
+- name: 'Assert | systemd fork'
+  ansible.builtin.assert:
+    quiet: true
+    that: 'not mongodb_cfg_process_management_fork'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                    Systemd does not use fork.                     │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Systemd manages process without forking. Enabling forking may lead
+      │ to non-deterministic behavior.
+      │
+      │ mongodb_cfg_process_management_fork: {{ mongodb_cfg_process_management_fork }}
+
+- name: 'Assert | supported version'
+  when: mongodb_srv_fatal_version_enable
+  ansible.builtin.assert:
+    quiet: true
+    that: 'mongodb_srv_version == mongodb_role_validate_version'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                      Version not supported.                       │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Role does not explicitly support requested version and fatal
+      │ version mismatch has been enabled.
+      │
+      │ mongodb_srv_fatal_version_enable: {{ mongodb_srv_fatal_version_enable }}
+      │ mongodb_srv_version: {{ mongodb_srv_version }}
+      │ Supported version: {{ mongodb_role_validate_version }}
+
+- name: 'Assert | supported version ⓘ'
+  when: >
+    mongodb_srv_fatal_version_enable and
+    mongodb_srv_version != mongodb_role_validate_version
+  ansible.builtin.debug:
+    msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │               Officially supported release versions               │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ {{ mongodb_role_validate_version }} release supported.
+      │
+      │ mongodb_srv_version: {{ mongodb_srv_version }}
+
+- name: 'Assert | CPU AVX support'
+  ansible.builtin.assert:
+    quiet: true
+    that: '"avx" in ansible_facts.flags'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                   AVX CPU extensions required.                    │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ MongoDB 5.0+ requires AVX extensions.
+      │
+      │ Non-AVX MongoDB support requires building MongoDB with patches or
+      │ using 4.4; both of which are not supported by this role.
+      │
+      │ Reference:
+      │ * https://github.com/openimsdk/open-im-server/issues/1533
+      │ * https://github.com/AmazedMender16/mongodb-no-avx-patch
+
+- name: 'Assert | log rotate behavior'
+  when: mongodb_cfg_system_log_log_rotate | lower == 'reopen'
+  ansible.builtin.assert:
+    quiet: true
+    that: 'mongodb_cfg_system_log_log_append == true'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │             Requirements not met: log rotate reopen.              │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Log rotate reopen requires log append enabled.
+      │
+      │ mongodb_cfg_system_log_log_rotate: {{ mongodb_cfg_system_log_log_rotate }}
+      │ mongodb_cfg_system_log_log_append: {{ mongodb_cfg_system_log_log_append }}
+
+- name: 'Assert | mutually exclusion bind IP'
+  when: mongodb_cfg_net_bind_ip | length > 0
+  ansible.builtin.assert:
+    quiet: true
+    that: 'mongodb_cfg_net_bind_ip_all == false'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │         Requirements not met: Mutually exclusive bind IP.         │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Bind and Bind all are mutually exclusive.
+      │
+      │ mongodb_cfg_net_bind_ip: {{ mongodb_cfg_net_bind_ip }}
+      │ mongodb_cfg_net_bind_ip_all: {{ mongodb_cfg_net_bind_ip_all }}
+
+- name: 'Assert | TLS requirements'
+  when: mongodb_cfg_net_tls_mode | lower != 'disabled'
+  ansible.builtin.assert:
+    quiet: true
+    that: 'mongodb_cfg_net_tls_certificate_key_file | length > 0'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                    Requirements not met: TLS.                     │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ TLS requires certificate key file.
+      │
+      │ mongodb_cfg_net_tls_certificate_key_file: {{ mongodb_cfg_net_tls_certificate_key_file }}
+
+- name: 'Assert | TLS password requirements'
+  when: mongodb_cfg_net_tls_certificate_key_file_password | length > 0
+  ansible.builtin.assert:
+    quiet: true
+    that: 'mongodb_cfg_net_tls_certificate_key_file | length > 0'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │          Requirements not met: TLS certificate password.          │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ TLS certificate password specified but no certificate set.
+      │
+      │ mongodb_cfg_net_tls_certificate_key_file: {{ mongodb_cfg_net_tls_certificate_key_file }}
+      │ mongodb_cfg_net_tls_certificate_key_file_password: {{ mongodb_cfg_net_tls_certificate_key_file_password }}
+
+- name: 'Assert | mutually exclusive TLS certificate store'
+  when: mongodb_cfg_net_tls_certificate_selector | length > 0
+  ansible.builtin.assert:
+    quiet: true
+    that: 'mongodb_cfg_net_tls_certificate_key_file | length == 0'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │       Requirements not met: Mutually exclusive cert store.        │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ TLS certificate selector and key file are mutually exclusive.
+      │
+      │ mongodb_cfg_net_tls_certificate_key_file: {{ mongodb_cfg_net_tls_certificate_key_file }}
+      │ mongodb_cfg_net_tls_certificate_selector: {{ mongodb_cfg_net_tls_certificate_selector }}
+
+- name: 'Assert | mutually exclusive TLS cluster certificate store'
+  when: mongodb_cfg_net_tls_cluster_certificate_selector | length > 0
+  ansible.builtin.assert:
+    quiet: true
+    that: 'mongodb_cfg_net_tls_cluster_file | length == 0'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │   Requirements not met: Mutually exclusive cluster cert store.    │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ TLS cluster certificate selector and file are mutually exclusive.
+      │
+      │ mongodb_cfg_net_tls_cluster_file: {{ mongodb_cfg_net_tls_cluster_file }}
+      │ mongodb_cfg_net_tls_cluster_certificate_selector: {{ mongodb_cfg_net_tls_cluster_certificate_selector }}
+
+- name: 'Assert | TLS cluster password requirements'
+  when: mongodb_cfg_net_tls_cluster_password | length > 0
+  ansible.builtin.assert:
+    quiet: true
+    that: 'mongodb_cfg_net_tls_cluster_file | length > 0'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │      Requirements not met: Cluster TLS certificate password.      │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Cluster TLS certificate password specified but no certificate set.
+      │
+      │ mongodb_cfg_net_tls_cluster_file: {{ mongodb_cfg_net_tls_cluster_file }}
+      │ mongodb_cfg_net_tls_cluster_password: {{ mongodb_cfg_net_tls_cluster_password }}
+
+- name: 'Assert | X.509 requirements'
+  when: mongodb_cfg_security_cluster_auth_mode is search('509')
+  ansible.builtin.assert:
+    quiet: true
+    that: mongodb_cfg_net_tls_ca_file | length > 0 or
+          mongodb_cfg_net_tls_certificate_selector | length > 0
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                   Requirements not met: X.509.                    │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ X.509 cluster auth mode requires one of the following set:
+      │
+      │ mongodb_cfg_security_cluster_auth_mode: {{ mongodb_cfg_security_cluster_auth_mode }}
+      │ mongodb_cfg_net_tls_ca_file: {{ mongodb_cfg_net_tls_ca_file }}
+      │ mongodb_cfg_net_tls_certificate_selector: {{ mongodb_cfg_net_tls_certificate_selector }}
+
+- name: 'Assert | KMIP client cert disabled'
+  when: mongodb_cfg_security_enable_encryption
+  ansible.builtin.assert:
+    quiet: true
+    that: 'mongodb_cfg_security_kmip_connect_timeout_ms >= 1000'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │   Requirements not met: KMIP timeout must be greater than 1000.   │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ KMIP connect retries must be greater than 1000ms.
+      │
+      │ mongodb_cfg_security_kmip_connect_timeout_ms: {{ mongodb_cfg_security_kmip_connect_timeout_ms }}
+
+- name: 'Assert | mongot host and search index equal'
+  ansible.builtin.assert:
+    quiet: true
+    that: 'mongodb_cfg_set_parameter_search_index_management_host_and_port == mongodb_cfg_set_parameter_mongot_host'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │      Requirements not met: Mongot host != search index host.      │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Search index management host and port must be equal to mongot host.
+      │
+      │ mongodb_cfg_set_parameter_mongot_host: {{ mongodb_cfg_set_parameter_mongot_host }}
+      │ mongodb_cfg_set_parameter_search_index_management_host_and_port: {{ mongodb_cfg_set_parameter_search_index_management_host_and_port }}
+
+- name: 'Assert | storage cache size GB or percentage'
+  when: mongodb_cfg_storage_wired_tiger_engine_config_cache_size_gb != -1
+  ansible.builtin.assert:
+    quiet: true
+    that: 'mongodb_cfg_storage_wired_tiger_engine_config_cache_size_pct == -1'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │  Requirements not met: Storage cache size is mutually exclusive.  │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Storage cache size options are mutually exclusive.
+      │
+      │ mongodb_cfg_storage_engine: {{ mongodb_cfg_storage_engine }}
+      │ mongodb_cfg_storage_wired_tiger_engine_config_cache_size_gb: {{ mongodb_cfg_storage_wired_tiger_engine_config_cache_size_gb }}
+      │ mongodb_cfg_storage_wired_tiger_engine_config_cache_size_pct: {{ mongodb_cfg_storage_wired_tiger_engine_config_cache_size_pct }}
+
+- name: 'Assert | storage in memory size'
+  ansible.builtin.assert:
+    quiet: true
+    that: 'mongodb_cfg_replication_enable_majority_read_concern'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │           Requirements not met: Majority read concern.            │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Majority read concern cannot be disabled in MongoDB 5.0+.
+      │
+      │ mongodb_cfg_replication_enable_majority_read_concern: {{ mongodb_cfg_replication_enable_majority_read_concern }}
+
+- name: 'Assert | sharding cluster role'
+  when: mongodb_cfg_sharding_cluster_role | length > 0
+  ansible.builtin.assert:
+    quiet: true
+    that: 'mongodb_cfg_replication_repl_set_name | length > 0'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │           Requirements not met: Sharding cluster role.            │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Sharding cluster role requires replication name set.
+      │
+      │ mongodb_cfg_sharding_cluster_role: {{ mongodb_cfg_sharding_cluster_role }}
+      │ mongodb_cfg_replication_repl_set_name: {{ mongodb_cfg_replication_repl_set_name }}
+
+- name: 'Assert | audit log destination file requirements'
+  when: mongodb_cfg_audit_log_destination | lower == 'file'
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - 'mongodb_cfg_audit_log_path | length > 0'
+      - 'mongodb_cfg_audit_log_format | length > 0'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │         Requirements not met: Audit log destination file.         │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Audit log destination file requires path and format set.
+      │
+      │ mongodb_cfg_audit_log_destination: {{ mongodb_cfg_audit_log_destination }}
+      │ mongodb_cfg_audit_log_path: {{ mongodb_cfg_audit_log_path }}
+      │ mongodb_cfg_audit_log_format: {{ mongodb_cfg_audit_log_format }}
+
+- name: 'Assert | mutually exclusive audit key file'
+  when: mongodb_cfg_audit_log_local_audit_key_file | length > 0
+  ansible.builtin.assert:
+    quiet: true
+    that: 'mongodb_cfg_audit_log_audit_encryption_key_identifier | length == 0'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │               Requirements not met: Audit key file.               │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Audit key file is mutually exclusive with key identifier.
+      │
+      │ mongodb_cfg_audit_log_local_audit_key_file: {{ mongodb_cfg_audit_log_local_audit_key_file }}
+      │ mongodb_cfg_audit_log_audit_encryption_key_identifier: {{ mongodb_cfg_audit_log_audit_encryption_key_identifier }}
+
+- name: 'Assert | audit log path'
+  when: mongodb_cfg_audit_log_destination | lower == 'file'
+  ansible.builtin.assert:
+    quiet: true
+    that: 'mongodb_cfg_audit_log_path | length == 0'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │               Requirements not met: Audit log path.               │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Audit log path required when destination is file.
+      │
+      │ mongodb_cfg_audit_log_path: {{ mongodb_cfg_audit_log_path }}
+      │ mongodb_cfg_audit_log_destination: {{ mongodb_cfg_audit_log_destination }}
+
+- name: 'Assert | gRPC key file'
+  when: mongodb_cfg_server_grpc_tls_certificate_key_file | length > 0
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - 'mongodb_cfg_server_grpc_tls_mode in ["TLS", "mTLS"]'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │               Requirements not met: gRPC key file.                │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ gRPC key file requires TLS mode to be TLS or mTLS.
+      │
+      │ mongodb_cfg_server_grpc_tls_certificate_key_file: {{ mongodb_cfg_server_grpc_tls_certificate_key_file }}
+      │ mongodb_cfg_server_grpc_tls_mode: {{ mongodb_cfg_server_grpc_tls_mode }}

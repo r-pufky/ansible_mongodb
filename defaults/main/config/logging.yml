@@ -1,0 +1,31 @@
+---
+###############################################################################
+# Health Check (healthCheck)
+###############################################################################
+# Reference:
+# * https://www.mongodb.com/docs/manual/reference/configuration-options
+
+# Logging verbosity.
+#
+# Values:
+#   ERROR: Critical errors that prevent application from functioning correctly.
+#    WARN: Potentially problematic situations that don't immediately cause
+#          failure but warrant attention.
+#    INFO: General information about application's progress and state
+#          (default).
+#   DEBUG: Detailed information useful for debugging, often including variable
+#          values and execution flow.
+#   TRACE: Extremely fine-grained information, typically used for tracing
+#          execution of specific code paths.
+#
+# Default: '' (INFO).
+mongodb_cfg_logging_verbosity: ''
+
+# Logback file path.
+#
+# Values:
+#       '': Do not create or configure log file appender (default).
+#   {PATH}: Absolute path to log file appender.
+#
+# Default: '' (disabled).
+mongodb_cfg_logging_log_path: ''

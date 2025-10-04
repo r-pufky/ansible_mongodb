@@ -1,0 +1,23 @@
+---
+###############################################################################
+# Process Management (processManagement)
+###############################################################################
+# Reference:
+# * https://www.mongodb.com/docs/manual/reference/configuration-options
+
+# Enable daemon (forking process) mode?
+#
+# Do not configure for systemd systems.
+#
+# Default: False.
+mongodb_cfg_process_management_fork: false
+
+# Pid File location.
+#
+# Do not configure for systemd systems.
+#
+# Default: '' (disabled).
+mongodb_cfg_process_management_pid_file_path: ''
+
+# Timezone database location. Default: '/usr/share/zoneinfo'.
+mongodb_cfg_process_management_time_zone_info: '/usr/share/zoneinfo'

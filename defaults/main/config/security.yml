@@ -1,0 +1,330 @@
+---
+###############################################################################
+# Config (mongod.conf)
+###############################################################################
+# Reference:
+# * https://www.mongodb.com/docs/manual/reference/configuration-options
+
+# Shared cluster/replica set shared secret key file.
+#
+# Implies mongodb_cfg_security_authorization.
+#
+# Keyfiles for internal membership authentication use YAML format to allow for
+# multiple keys in a keyfile. The YAML format accepts either:
+# * A single key string (same as in earlier versions)
+# * A sequence of key strings
+#
+# The format is compatible with existing single-key keyfiles that use text fil
+# format.
+#
+# Sourced from ansible controller; automatically placed in
+# /etc/mongodb/security/keyfile with correct permissions.
+#
+# mongodb_cfg_security_key_file: 'host_vars/db.example.com/data/keyfile'
+#
+# Default: '' (disabled).
+#
+# Reference:
+# * https://www.mongodb.com/docs/manual/core/security-internal-authentication
+mongodb_cfg_security_key_file: ''
+
+# Authentication mode used for cluster authentication.
+#
+#
+# Values:
+#       keyFile: Use a keyfile for authentication. Accept only keyfiles
+#                (default).
+#   sendKeyFile: For rolling upgrade purposes. Send keyfile for authentication
+#                but accept both keyfiles, X.509 certificates.
+#      sendX509: For rolling upgrade purposes. Send X.509 certificate for
+#                authentication but accept both keyfiles, X.509 certificates.
+#                Requires: mongodb_cfg_net_tls_ca_file,
+#                          mongodb_cfg_net_tls_use_system_ca, or
+#                          mongodb_cfg_net_tls_certificate_selector.
+#          x509: Send X.509 certificate for authentication, accept only X.509
+#                certificates. Recommended.
+#                Requires: mongodb_cfg_net_tls_ca_file,
+#                          mongodb_cfg_net_tls_use_system_ca, or
+#                          mongodb_cfg_net_tls_certificate_selector.
+#
+# Default: 'keyFile'.
+mongodb_cfg_security_cluster_auth_mode: 'keyFile'
+
+# Enable Role-Based Access Control (RBAC).
+#
+# Values:
+#    enabled: User can access only database resources and actions for which
+#             they have been granted privileges.
+#   disabled: User can access any database and perform any action.
+#
+# Default: 'disabled'.
+mongodb_cfg_security_authorization: 'disabled'
+
+# Enable authenticated/non-authenticated connections to other instances?
+#
+# Used for performing rolling transition of replica sets or sharded clusters
+# from a no-auth configuration to internal authentication. Requires specifying
+# a internal authentication mechanism.
+#
+# Default: False (disabled).
+mongodb_cfg_security_transition_to_auth: false
+
+# Enable server-side JavaScript execution?
+#
+# If you do not use these operations, disable server-side scripting.
+#
+# Values:
+#   False: Disable - cannot use operations performing server-side execution of
+#          JavaScript code, such as $where query operator, mapReduce command,
+#          $accumulator, and $function.
+#    True: Enabled -  server-side JavaScript functions ($accumulator,
+#          $function, $where) are deprecated. MongoDB logs a warning when you
+#          run these functions. Map-reduce deprecated starting in MongoDB 5.0.
+#
+# Default: True (enabled).
+mongodb_cfg_security_javascript_enabled: true
+
+# Enabled redaction of a log event before logging?
+#
+# Only available for Enterprise licenses.
+#
+# This prevents mongod/mongos from writing potentially sensitive data stored on
+# the database to diagnostic log. Metadata such as error or operation codes,
+# line numbers, and source file names are still visible in the logs.
+#
+# Default: False (disabled)
+mongodb_cfg_security_redact_client_log_data: false
+
+# Cluster IP/CIDR allowed list for authentication.
+#
+# Special Case:
+# * No effect on a mongod started without authentication.
+#
+# Values:
+#   {CIDR}: CIDR range.
+#     {IP}: IPv4/IPv6 address.
+#
+# Default: [] (disabled).
+mongodb_cfg_security_cluster_ip_source_allow_list: []
+
+# Enable encryption for WiredTiger storage engine?
+#
+# Only available for Enterprise licenses.
+#
+# Must be true to pass in encryption keys and configurations.
+#
+# Default: False (disabled).
+mongodb_cfg_security_enable_encryption: false
+
+# Encryption at rest cipher mode.
+#
+# Only available for Enterprise licenses.
+#
+# Values:
+#   AES256-CBC: 256-bit Advanced Encryption Standard in Cipher Block Chaining
+#               Mode.
+#   AES256-GCM: 256-bit Advanced Encryption Standard in Galois/Counter Mode.
+#
+# Default: 'AES256-CBC'.
+mongodb_cfg_security_encryption_cipher_mode: 'AES256-CBC'
+
+# Encryption keyfile to use when not using KMIP.
+#
+# Only available for Enterprise licenses.
+#
+# Requires mongodb_cfg_security_enable_encryption=true.
+#
+# Sourced from ansible controller; automatically placed in
+# /etc/mongodb/security/encryption_keyfile with correct permissions.
+#
+# mongodb_cfg_security_encryption_key_file:
+#   'host_vars/db.example.com/data/encryption-keyfile'
+#
+# Default: '' (disabled).
+mongodb_cfg_security_encryption_key_file: ''
+
+# Unique KMIP identifier for an existing key within KMIP server.
+#
+# Only available for Enterprise licenses.
+#
+# Requires mongodb_cfg_security_enable_encryption=true.
+#
+# If unspecified, MongoDB requests that KMIP server create a new key to utilize
+# as system key. If KMIP server cannot locate a key with specified identifier
+# or data is already encrypted with a key, MongoDB throws an error.
+#
+# Default: '' (request new key).
+mongodb_cfg_security_kmip_key_identifier: ''
+
+# Rotate master key and re-encrypt internal keystore?
+#
+# Only available for Enterprise licenses.
+#
+# Default: False (disabled).
+mongodb_cfg_security_kmip_rotate_master_key: false
+
+# Hostname or IP address of KMIP server to connect to.
+#
+# Only available for Enterprise licenses.
+#
+# Requires mongodb_cfg_security_enable_encryption=true.
+#
+# KMIP server is selected in order based on the first response.
+#
+# Default: [] (disabled).
+mongodb_cfg_security_kmip_server_name: []
+
+# KMIP server port.
+#
+# Only available for Enterprise licenses.
+#
+# Requires:
+# * mongodb_cfg_security_enable_encryption=true.
+# * mongodb_cfg_security_kmip_server_name set.
+#
+# Default: 5696.
+mongodb_cfg_security_kmip_port: 5696
+
+# KMIP client certificate file (PEM).
+#
+# Only available for Enterprise licenses.
+#
+# Requires:
+# * mongodb_cfg_security_enable_encryption=true.
+# * mongodb_cfg_security_kmip_server_name set.
+#
+# PEM file used to authenticate MongoDB to KMIP server. Must contain both
+# TLS/SSL certificate and key.
+#
+# Sourced from ansible controller; automatically placed in
+# /etc/mongodb/security/kmip_client.pem with correct permissions.
+#
+# mongodb_cfg_security_kmip_client_certificate_file:
+#   'host_vars/db.example.com/data/kmip_client.pem'
+#
+# Default: '' (disabled).
+mongodb_cfg_security_kmip_client_certificate_file: ''
+
+# KMIP client certificate password.
+#
+# Only available for Enterprise licenses.
+#
+# Requires:
+# * mongodb_cfg_security_enable_encryption=true.
+# * mongodb_cfg_security_kmip_client_certificate_file set.
+#
+# Default: '' (disabled).
+mongodb_cfg_security_kmip_client_certificate_password: ''
+
+# KMIP certificate property to match for selecting certificate to use.
+#
+# Only available for Enterprise licenses.
+#
+# Mutually exclusive with mongodb_cfg_security_kmip_client_certificate_file.
+#
+# Values:
+#      subject={VALUE}: Subject or common name on certificate.
+#   thumbprint={VALUE}: (fingerprint) Hexadecimal SHA1 public key digest.
+#
+# mongodb_cfg_net_tls_certificate_selector: 'subject=example.com'
+#
+# Default: '' (disabled).
+mongodb_cfg_security_kmip_client_certificate_selector: ''
+
+# KMIP server CA certificate file (PEM).
+#
+# Only available for Enterprise licenses.
+#
+# Requires mongodb_cfg_security_enable_encryption=true.
+#
+# PEM file used to validate secure client connection to KMIP server.
+#
+# Sourced from ansible controller; automatically placed in
+# /etc/mongodb/security/kmip_ca.pem with correct permissions.
+#
+# mongodb_cfg_security_kmip_server_ca_file:
+#   'host_vars/db.example.com/data/kmip_ca.pem'
+#
+# Default: '' (disabled).
+mongodb_cfg_security_kmip_server_ca_file: ''
+
+# KMIP server connection retries.
+#
+# Only available for Enterprise licenses.
+#
+# Requires mongodb_cfg_security_enable_encryption=true.
+#
+# Use with mongodb_cfg_kmip_connect_timeout_ms to control how long mongod waits
+# for a response between each retry.
+#
+# Default: 0 (no retries).
+mongodb_cfg_security_kmip_connect_retries: 0
+
+# KMIP server response timeout (MS).
+#
+# Only available for Enterprise licenses.
+#
+# Requires mongodb_cfg_security_enable_encryption=true.
+#
+# Use with mongodb_cfg_security_kmip_connect_retries to wait up to value
+# specified before each retry.
+#
+# Special Case:
+#   1000+: Must be great than 1000ms.
+#
+# Default: 5000.
+mongodb_cfg_security_kmip_connect_timeout_ms: 5000
+
+# Activate all newly created KMIP keys and ensure active state.
+#
+# Only available for Enterprise licenses.
+#
+# Requires mongodb_cfg_security_enable_encryption=true.
+#
+# Default: True.
+mongodb_cfg_security_kmip_activate_keys: true
+
+# Poll KMIP server polling interval for active keys (seconds).
+#
+# Only available for Enterprise licenses.
+#
+# Requires mongodb_cfg_security_enable_encryption=true.
+#
+# Special Case:
+#   -1: Disabled.
+#
+# Default: 900.
+mongodb_cfg_security_kmip_key_state_polling_seconds: 900
+
+# Enable KMIP protocol version 1.0 or 1.1 instead of 1.2.
+#
+# Only available for Enterprise licenses.
+#
+# Requires mongodb_cfg_security_enable_encryption=true.
+#
+# To use audit log encryption with KMIP version 1.0 or 1.1, you must specify
+# '--auditEncryptKeyWithKMIPGet' at startup.
+#
+# Default: False (disabled).
+mongodb_cfg_security_kmip_key_use_legacy_protocol: false
+
+# FQDN server domain name for SASL and Kerberos authentication.
+#
+# Overrides hostname only for configuration of SASL and Kerberos.
+#
+# Default: ''.
+mongodb_cfg_security_sasl_host_name: ''
+
+# Registered name of the service using SASL.
+#
+# Only available for Enterprise licenses.
+#
+# Override default Kerberos service name component of Kerberos principal name,
+# on a per-instance basis. Ensure that your driver supports alternate service
+# names. If unspecified, the default value is mongodb.
+#
+# Default: '' (mongodb).
+mongodb_cfg_security_sasl_service_name: ''
+
+# UNIX domain socket file for saslauthd. Default: '' (disabled).
+mongodb_cfg_security_sasl_authd_socket_path: ''

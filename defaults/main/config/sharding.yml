@@ -1,0 +1,37 @@
+---
+###############################################################################
+# Sharding (sharding)
+###############################################################################
+# Reference:
+# * https://www.mongodb.com/docs/manual/reference/configuration-options
+
+# Role mongod instance has in sharded cluster.
+#
+# Requires mongodb_cfg_replication_repl_set_name set.
+#
+# Values:
+#   configsvr: Config server - instance starts on port 27019 by default.
+#    shardsvr: Shard server - instance starts port 27018 by default.
+#
+# Default: '' (disabled).
+mongodb_cfg_sharding_cluster_role: ''
+
+# Enable saving of documents migrated from shard during chunk migration?
+#
+# Default: False.
+mongodb_cfg_sharding_archive_moved_chunks: false
+
+# Config servers for sharded clusters are deployed as a replica set.
+#
+# Replica set config servers must run the WiredTiger storage engine. The mongos
+# instances for sharded cluster must specify same config server replica set
+# name but can specify hostname and port of different members of replica set.
+#
+# Values:
+#   {SET}/{HOST}:{PORT}: Replication set, Hostname or IP with port.
+#
+# mongodb_cfg_sharding_config_db:
+#   - 'replication_set/cfg1.example.net:27019'
+#
+# Default: [] (disabled).
+mongodb_cfg_sharding_config_db: []

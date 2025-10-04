@@ -1,0 +1,47 @@
+---
+###############################################################################
+# Replication (replication)
+###############################################################################
+# Reference:
+# * https://www.mongodb.com/docs/manual/reference/configuration-options
+
+# Maximum size for uncompressed oplog (MB).
+#
+# Oplog can grow past its configured size limit to avoid deleting majority
+# commit point. Once set this can only be changed using '--replSetResizeOplog'.
+#
+# Values:
+#   -1: Use ~5% of available disk space.
+#    #: Disk space to use.
+#
+# Default: -1 (automatic).
+mongodb_cfg_replication_oplog_size_mb: -1
+
+# Replica set mongod is part of.
+#
+# All hosts in the replica set must have the same set name.
+#
+# Default: ''.
+mongodb_cfg_replication_repl_set_name: ''
+
+# Enable 'majority' read concern?
+#
+# MongoDB 5.0+ cannot be changed and is always set to true.
+#
+# Default: True.
+mongodb_cfg_replication_enable_majority_read_concern: true
+
+# Ping time mongos uses to determine secondary replica set read operation (ms).
+#
+# Uses moving average of recent ping times calculated at most every 10 seconds.
+# Some queries may reach members above threshold until mongos recalculates the
+# average.
+#
+# When mongos receives a request that permits reads to secondary members:
+# * Find member of set with lowest ping time.
+# * Construct list of replica set members that is within a ping time of nearest
+#   suitable member of set.
+# * Selects member to read from at random from this list.
+#
+# Default: 15.
+mongodb_cfg_replication_local_ping_threshold_ms: 15

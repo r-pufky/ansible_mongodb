@@ -1,0 +1,431 @@
+---
+###############################################################################
+# System Log (systemLog)
+###############################################################################
+# Reference:
+# * https://www.mongodb.com/docs/manual/reference/configuration-options
+
+# Default component log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_verbosity: 0
+
+# Enable quiet mode? Default: False.
+mongodb_cfg_system_log_quiet: false
+
+# Enable stack tracing all exceptions? Default: False.
+mongodb_cfg_system_log_trace_all_exceptions: false
+
+# Syslog facility.
+#
+# Requires mongodb_cfg_system_log_destination=syslog.
+#
+# Values:
+#       auth: Security and authorization processes.
+#   authpriv: Access-control-related messages.
+#     daemon: System daemons that don't fit into other special categories.
+#       cron: Cron and atd task scheduling services.
+#       kern: Kernel messages.
+#        lpr: Line printer subsystem.
+#       mail: Mail system.
+#       news: Network news subsystem.
+#     syslog: Syslogd daemon often including timestamps (e.g., "--MARK--").
+#       user: User-level messages (default).
+#
+# Default: 'user'.
+mongodb_cfg_system_log_syslog_facility: 'user'
+
+# TODO - should this be ignored/disabled, or use a systemd drop-in?
+# Diagnostic logging location. Default: '/var/log/mongodb/mongod.log'.
+mongodb_cfg_system_log_path: '/var/log/mongodb/mongod.log'
+
+# Enable append to existing log files on restart? Default: False.
+mongodb_cfg_system_log_log_append: false
+
+# Log rotate policy.
+#
+# Values:
+#   rename: Rename log file on rotation.
+#   reopen: Close and reopen log file (standard rotate behavior). Requires
+#           mongodb_cfg_system_log_log_append=true.
+#
+# Default: 'rename'.
+mongodb_cfg_system_log_log_rotate: 'rename'
+
+# Log output destination.
+#
+# Values:
+#     file: Log to file. Requires mongodb_cfg_system_log_path set.
+#   syslog: Log to syslog.
+#       '': Log to standard output.
+#
+# Default: 'file'.
+mongodb_cfg_system_log_destination: 'file'
+
+# Log timestamp format.
+#
+# Values:
+#     iso8601-utc: Coordinated Universal Time (UTC) in ISO-8601 format.
+#                  1970-01-01T00:00:00.000Z
+#   iso8601-local: local time in ISO-8601 format.
+#                  1969-12-31T19:00:00.000-05:00
+#
+# Default: 'iso8601-local'.
+mongodb_cfg_system_log_time_stamp_format: 'iso8601-local'
+
+# Assertion log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_assert_verbosity: 0
+
+# Access control log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_access_control_verbosity: 0
+
+# Command log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_command_verbosity: 0
+
+# Control log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_control_verbosity: 0
+
+# FTDC log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_ftdc_verbosity: 0
+
+# Geo log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_geo_verbosity: 0
+
+# Index log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_index_verbosity: 0
+
+# Network log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_network_verbosity: 0
+
+# Query log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_query_verbosity: 0
+
+# Query rejected log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_query_rejected_verbosity: 0
+
+# Query stats log message level.
+#
+# Values:
+#    -1: Disabled.
+#     0: Informational messages, no $queryStats called (default).
+#   1-2: Include $queryStats when algorithm=hmac-sha-256. HMAC keys redacted.
+#   3-5: Include $queryStats when algorithm=hmac-sha-256 and corresponding
+#        results. Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_query_stats_verbosity: 0
+
+# Replication log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_replication_verbosity: 0
+
+# Replication election log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_replication_election_verbosity: 0
+
+# Replication heartbeats log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_replication_heartbeats_verbosity: 0
+
+# Replication initial sync log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_replication_initial_sync_verbosity: 0
+
+# Replication rollback log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_replication_rollback_verbosity: 0
+
+# Sharding log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_sharding_verbosity: 0
+
+# Storage log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_storage_verbosity: 0
+
+# Storage journal log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_storage_journal_verbosity: 0
+
+# Storage recovery log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_storage_recovery_verbosity: 0
+
+# Storage WiredTiger log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: -1 (disabled).
+mongodb_cfg_system_log_component_storage_wt_verbosity: -1
+
+# Storage WiredTiger backup log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: -1 (disabled).
+mongodb_cfg_system_log_component_storage_wt_wt_backup_verbosity: -1
+
+# Storage WiredTiger checkpoint log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: -1 (disabled).
+mongodb_cfg_system_log_component_storage_wt_wt_checkpoint_verbosity: -1
+
+# Storage WiredTiger compact log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: -1 (disabled).
+mongodb_cfg_system_log_component_storage_wt_wt_compact_verbosity: -1
+
+# Storage WiredTiger eviction log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: -1 (disabled).
+mongodb_cfg_system_log_component_storage_wt_wt_eviction_verbosity: -1
+
+# Storage WiredTiger history store (HS) log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: -1 (disabled).
+mongodb_cfg_system_log_component_storage_wt_wt_hs_verbosity: -1
+
+# Storage WiredTiger recovery log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: -1 (disabled).
+mongodb_cfg_system_log_component_storage_wt_wt_recovery_verbosity: -1
+
+# Storage WiredTiger rollback to stable (RTS) log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: -1 (disabled).
+mongodb_cfg_system_log_component_storage_wt_wt_rts_verbosity: -1
+
+# Storage WiredTiger salvage operations log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: -1 (disabled).
+mongodb_cfg_system_log_component_storage_wt_wt_salvage_verbosity: -1
+
+# Storage WiredTiger timestamp log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: -1 (disabled).
+mongodb_cfg_system_log_component_storage_wt_wt_timestamp_verbosity: -1
+
+# Storage WiredTiger transaction log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: -1 (disabled).
+mongodb_cfg_system_log_component_storage_wt_wt_transaction_verbosity: -1
+
+# Storage WiredTiger verify log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: -1 (disabled).
+mongodb_cfg_system_log_component_storage_wt_wt_verify_verbosity: -1
+
+# Storage WiredTiger write log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: -1 (disabled).
+mongodb_cfg_system_log_component_storage_wt_wt_write_log_verbosity: -1
+
+# Transaction log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_transaction_verbosity: 0
+
+# Write log message level.
+#
+# Values:
+#   -1: Disabled
+#    0: Informational messages (default).
+#    5: Max verbosity.
+#
+# Default: 0.
+mongodb_cfg_system_log_component_write_verbosity: 0

@@ -1,0 +1,2125 @@
+---
+# yamllint disable rule:line-length
+###############################################################################
+# Annotate User Configuration.
+###############################################################################
+# MongoDB config files are YAML format; only rendering non-default values. Some
+# values are rendered as pure YAML strings. Debian default values are always
+# rendered to provide a Vanilla Debian install with no configuration required.
+#
+# Use r_pufky.data.v3 data annotations to enforce consistency and validation
+# checks, building a finished YAML dictionary to render configuration file.
+#
+# Mongot and Mangos configuration sections have been stored in their component
+# configurations.
+#
+# Generates:
+#   _mongodb: dict - Role runtime specific config.
+#   _mongodb_map: list of dict - Annotated config map.
+#   _mongodb_order: list of str - Config section order.
+#   _mongodb_yaml: dict - Final YAML configuration dict.
+#
+# Reference:
+# * https://docs.mongodb-ngx.com/setup/#bare_metal
+# * https://www.mongodb.com/docs/manual/reference/configuration-options/
+# * https://docs.ansible.com/ansible/latest/dev_guide/developing_program_flow_modules.html#argument-spec
+# * https://github.com/ansible/ansible/issues/77159
+
+- name: 'Annotate | DEPRECATED VARIABLES IN USE ⚠'
+  when: mongodb_cfg_process_management_pid_file_path | length > 0
+  ansible.builtin.fail:
+    msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                   DEPRECATED VARIABLES IN USE.                    │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Refer to defaults and update variables:
+      │
+      │ mongodb_cfg_process_management_pid_file_path: {{ mongodb_cfg_process_management_pid_file_path }}
+
+- name: 'Annotate | sanitize & annotate service defaults'
+  ansible.builtin.set_fact:  # noqa jinja[spacing] readability.
+    _mongodb_srv_version: "{{ {} | r_pufky.data.v3(
+        raw=mongodb_srv_version,
+        default=mongodb_role_validate_version,
+        hint='str',
+        order=1
+        )
+      }}"
+    _mongodb_srv_fatal_version_enable: "{{ {} | r_pufky.data.v3(
+        raw=mongodb_srv_fatal_version_enable,
+        default=true,
+        hint='bool',
+        order=2
+        )
+      }}"
+    _mongodb_srv_user: "{{ {} | r_pufky.data.v3(
+        raw=mongodb_srv_user,
+        default='mongodb',
+        _uid='',
+        hint='str',
+        order=3
+        )
+      }}"
+    _mongodb_srv_group: "{{ {} | r_pufky.data.v3(
+        raw=mongodb_srv_group,
+        default='mongodb',
+        _gid='',
+        hint='str',
+        order=4
+        )
+      }}"
+    _mongodb_srv_create_user: "{{ {} | r_pufky.data.v3(
+        raw=mongodb_srv_create_user,
+        default=true,
+        hint='bool',
+        order=5
+        )
+      }}"
+    _mongodb_srv_user_data_manage_enable: "{{ {} | r_pufky.data.v3(
+        raw=mongodb_srv_user_data_manage_enable,
+        default=false,
+        hint='bool',
+        order=6
+        )
+      }}"
+    _mongodb_srv_backup_enable: "{{ {} | r_pufky.data.v3(
+        raw=mongodb_srv_backup_enable,
+        default=false,
+        _backup_script=(
+          mongodb_srv_backup_dir | regex_replace('\\/$', '') ~ '/' ~
+          'mongodb_backup'
+        ),
+        hint='bool',
+        order=7
+        )
+      }}"
+    _mongodb_srv_backup_dir: "{{ {} | r_pufky.data.v3(
+        raw=mongodb_srv_backup_dir | regex_replace('\\/$', ''),
+        default='/data/mongodb/backup',
+        hint='str',
+        order=8
+        )
+      }}"
+    _mongodb_srv_backup_owner: "{{ {} | r_pufky.data.v3(
+        raw=mongodb_srv_backup_owner,
+        default='root',
+        hint='str',
+        order=9
+        )
+      }}"
+    _mongodb_srv_backup_group: "{{ {} | r_pufky.data.v3(
+        raw=mongodb_srv_backup_group,
+        default='root',
+        hint='str',
+        order=10
+        )
+      }}"
+    _mongodb_srv_backup_schedule: "{{ {} | r_pufky.data.v3(
+        raw=mongodb_srv_backup_schedule,
+        default='weekly',
+        hint='str',
+        order=11
+        )
+      }}"
+
+- name: 'Annotate | sanitize & annotate storage locations'
+  ansible.builtin.set_fact:
+    _mongodb:
+      db_root: "{{ mongodb_cfg_storage_db_path | regex_replace('\\/$', '') }}"
+      data_root:
+        "{{ mongodb_cfg_storage_data_path | regex_replace('\\/$', '') }}"
+      etc_root: '/etc/mongodb'
+
+- name: 'Annotate | sanitize & annotate config defaults'
+  ansible.builtin.set_fact:  # noqa jinja[spacing] readability.
+    _mongodb_cfg_system_log_verbosity: "{{ {} | r_pufky.data.v3(
+        section='systemLog',
+        key='verbosity',
+        raw=mongodb_cfg_system_log_verbosity,
+        nested_data=true,
+        default=0,
+        hint='int',
+        keep=false,
+        order=1
+        )
+      }}"
+    _mongodb_cfg_system_log_quiet: "{{ {} | r_pufky.data.v3(
+        section='systemLog',
+        key='quiet',
+        raw=mongodb_cfg_system_log_quiet,
+        nested_data=true,
+        default=false,
+        hint='bool',
+        keep=false,
+        order=2
+        )
+      }}"
+    _mongodb_cfg_system_log_trace_all_exceptions: "{{ {} | r_pufky.data.v3(
+        section='systemLog',
+        key='traceAllExceptions',
+        raw=mongodb_cfg_system_log_trace_all_exceptions,
+        nested_data=true,
+        default=false,
+        hint='bool',
+        keep=false,
+        order=3
+        )
+      }}"
+    _mongodb_cfg_system_log_syslog_facility: "{{ {} | r_pufky.data.v3(
+        section='systemLog',
+        key='syslogFacility',
+        raw=mongodb_cfg_system_log_syslog_facility | lower,
+        nested_data=true,
+        default='user',
+        hint='str',
+        keep=false,
+        order=4
+        )
+      }}"
+    _mongodb_cfg_system_log_path: "{{ {} | r_pufky.data.v3(
+        section='systemLog',
+        key='path',
+        raw=mongodb_cfg_system_log_path,
+        nested_data=true,
+        default='/var/log/mongodb/mongod.log',
+        hint='str',
+        order=5
+        )
+      }}"
+    _mongodb_cfg_system_log_log_append: "{{ {} | r_pufky.data.v3(
+        section='systemLog',
+        key='logAppend',
+        raw=mongodb_cfg_system_log_log_append,
+        nested_data=true,
+        default=false,
+        hint='bool',
+        order=5
+        )
+      }}"
+    _mongodb_cfg_system_log_log_rotate: "{{ {} | r_pufky.data.v3(
+        section='systemLog',
+        key='logRotate',
+        raw=mongodb_cfg_system_log_log_rotate | lower,
+        nested_data=true,
+        default='rename',
+        hint='str',
+        keep=false,
+        order=6
+        )
+      }}"
+    _mongodb_cfg_system_log_destination: "{{ {} | r_pufky.data.v3(
+        section='systemLog',
+        key='destination',
+        raw=mongodb_cfg_system_log_destination,
+        nested_data=true,
+        default='file',
+        hint='str',
+        order=7
+        )
+      }}"
+    _mongodb_cfg_system_log_time_stamp_format: "{{ {} | r_pufky.data.v3(
+        section='systemLog',
+        key='timeStampFormat',
+        raw=mongodb_cfg_system_log_time_stamp_format | lower,
+        nested_data=true,
+        default='iso8601-local',
+        hint='str',
+        keep=false,
+        order=8
+        )
+      }}"
+    _mongodb_cfg_system_log_component_assert_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.assert.verbosity',
+          raw=mongodb_cfg_system_log_component_assert_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          keep=false,
+          order=9
+        )
+      }}"
+    _mongodb_cfg_system_log_component_access_control_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.accessControl.verbosity',
+          raw=mongodb_cfg_system_log_component_access_control_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          keep=false,
+          order=10
+        )
+      }}"
+    _mongodb_cfg_system_log_component_command_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.command.verbosity',
+          raw=mongodb_cfg_system_log_component_command_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          keep=false,
+          order=11
+        )
+      }}"
+    _mongodb_cfg_system_log_component_control_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.control.verbosity',
+          raw=mongodb_cfg_system_log_component_control_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          keep=false,
+          order=12
+        )
+      }}"
+    _mongodb_cfg_system_log_component_ftdc_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.ftdc.verbosity',
+          raw=mongodb_cfg_system_log_component_ftdc_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          keep=false,
+          order=13
+        )
+      }}"
+    _mongodb_cfg_system_log_component_geo_verbosity: "{{ {} | r_pufky.data.v3(
+        section='systemLog',
+        key='component.geo.verbosity',
+        raw=mongodb_cfg_system_log_component_geo_verbosity,
+        nested_data=true,
+        default=0,
+        hint='int',
+        keep=false,
+        order=14
+        )
+      }}"
+    _mongodb_cfg_system_log_component_index_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.index.verbosity',
+          raw=mongodb_cfg_system_log_component_index_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          keep=false,
+          order=15
+        )
+      }}"
+    _mongodb_cfg_system_log_component_network_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.network.verbosity',
+          raw=mongodb_cfg_system_log_component_network_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          keep=false,
+          order=16
+        )
+      }}"
+    _mongodb_cfg_system_log_component_query_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.query.verbosity',
+          raw=mongodb_cfg_system_log_component_query_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          keep=false,
+          order=17
+        )
+      }}"
+    _mongodb_cfg_system_log_component_query_rejected_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.query.rejected.verbosity',
+          raw=mongodb_cfg_system_log_component_query_rejected_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          added='8.0',
+          keep=false,
+          order=18
+        )
+      }}"
+    _mongodb_cfg_system_log_component_query_stats_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.queryStats.verbosity',
+          raw=mongodb_cfg_system_log_component_query_stats_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          added='8.0',
+          keep=false,
+          order=19
+        )
+      }}"
+    _mongodb_cfg_system_log_component_replication_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.verbosity',
+          raw=mongodb_cfg_system_log_component_replication_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          added='8.0',
+          keep=false,
+          order=20
+        )
+      }}"
+    _mongodb_cfg_system_log_component_replication_election_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.election.verbosity',
+          raw=mongodb_cfg_system_log_component_replication_election_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          added='8.0',
+          keep=false,
+          order=21
+        )
+      }}"
+    _mongodb_cfg_system_log_component_replication_heartbeats_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.heartbeats.verbosity',
+          raw=mongodb_cfg_system_log_component_replication_heartbeats_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          added='8.0',
+          keep=false,
+          order=22
+        )
+      }}"
+    _mongodb_cfg_system_log_component_replication_initial_sync_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.initialSync.verbosity',
+          raw=mongodb_cfg_system_log_component_replication_initial_sync_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          added='8.0',
+          keep=false,
+          order=23
+        )
+      }}"
+    _mongodb_cfg_system_log_component_replication_rollback_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.rollback.verbosity',
+          raw=mongodb_cfg_system_log_component_replication_rollback_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          added='8.0',
+          keep=false,
+          order=24
+        )
+      }}"
+    _mongodb_cfg_system_log_component_sharding_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.sharding.verbosity',
+          raw=mongodb_cfg_system_log_component_sharding_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          added='8.0',
+          keep=false,
+          order=25
+        )
+      }}"
+    _mongodb_cfg_system_log_component_storage_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.storage.verbosity',
+          raw=mongodb_cfg_system_log_component_storage_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          added='8.0',
+          keep=false,
+          order=26
+        )
+      }}"
+    _mongodb_cfg_system_log_component_storage_journal_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.storage.journal.verbosity',
+          raw=mongodb_cfg_system_log_component_storage_journal_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          added='8.0',
+          keep=false,
+          order=27
+        )
+      }}"
+    _mongodb_cfg_system_log_component_storage_recovery_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.storage.recovery.verbosity',
+          raw=mongodb_cfg_system_log_component_storage_recovery_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          added='8.0',
+          keep=false,
+          order=28
+        )
+      }}"
+    _mongodb_cfg_system_log_component_storage_wt_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.storage.wt.verbosity',
+          raw=mongodb_cfg_system_log_component_storage_wt_verbosity,
+          nested_data=true,
+          default=-1,
+          hint='int',
+          added='5.3',
+          keep=false,
+          order=29
+        )
+      }}"
+    _mongodb_cfg_system_log_component_storage_wt_wt_backup_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.storage.wt.wtBackup.verbosity',
+          raw=mongodb_cfg_system_log_component_storage_wt_wt_backup_verbosity,
+          nested_data=true,
+          default=-1,
+          hint='int',
+          added='5.3',
+          keep=false,
+          order=30
+        )
+      }}"
+    _mongodb_cfg_system_log_component_storage_wt_wt_checkpoint_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.storage.wt.wtCheckpoint.verbosity',
+          raw=mongodb_cfg_system_log_component_storage_wt_wt_checkpoint_verbosity,
+          nested_data=true,
+          default=-1,
+          hint='int',
+          added='5.3',
+          keep=false,
+          order=31
+        )
+      }}"
+    _mongodb_cfg_system_log_component_storage_wt_wt_compact_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.storage.wt.wtCompact.verbosity',
+          raw=mongodb_cfg_system_log_component_storage_wt_wt_compact_verbosity,
+          nested_data=true,
+          default=-1,
+          hint='int',
+          added='5.3',
+          keep=false,
+          order=32
+        )
+      }}"
+    _mongodb_cfg_system_log_component_storage_wt_wt_eviction_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.storage.wt.wtEviction.verbosity',
+          raw=mongodb_cfg_system_log_component_storage_wt_wt_eviction_verbosity,
+          nested_data=true,
+          default=-1,
+          hint='int',
+          added='5.3',
+          keep=false,
+          order=33
+        )
+      }}"
+    _mongodb_cfg_system_log_component_storage_wt_wt_hs_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.storage.wt.wtHS.verbosity',
+          raw=mongodb_cfg_system_log_component_storage_wt_wt_hs_verbosity,
+          nested_data=true,
+          default=-1,
+          hint='int',
+          added='5.3',
+          keep=false,
+          order=34
+        )
+      }}"
+    _mongodb_cfg_system_log_component_storage_wt_wt_recovery_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.storage.wt.wtRecovery.verbosity',
+          raw=mongodb_cfg_system_log_component_storage_wt_wt_recovery_verbosity,
+          nested_data=true,
+          default=-1,
+          hint='int',
+          added='5.3',
+          keep=false,
+          order=35
+        )
+      }}"
+    _mongodb_cfg_system_log_component_storage_wt_wt_rts_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.storage.wt.wtRTS.verbosity',
+          raw=mongodb_cfg_system_log_component_storage_wt_wt_rts_verbosity,
+          nested_data=true,
+          default=-1,
+          hint='int',
+          added='5.3',
+          keep=false,
+          order=36
+        )
+      }}"
+    _mongodb_cfg_system_log_component_storage_wt_wt_salvage_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.storage.wt.wtSalvage.verbosity',
+          raw=mongodb_cfg_system_log_component_storage_wt_wt_salvage_verbosity,
+          nested_data=true,
+          default=-1,
+          hint='int',
+          added='5.3',
+          keep=false,
+          order=37
+        )
+      }}"
+    _mongodb_cfg_system_log_component_storage_wt_wt_timestamp_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.storage.wt.wtTimestamp.verbosity',
+          raw=mongodb_cfg_system_log_component_storage_wt_wt_timestamp_verbosity,
+          nested_data=true,
+          default=-1,
+          hint='int',
+          added='5.3',
+          keep=false,
+          order=38
+        )
+      }}"
+    _mongodb_cfg_system_log_component_storage_wt_wt_transaction_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.storage.wt.wtTransaction.verbosity',
+          raw=mongodb_cfg_system_log_component_storage_wt_wt_transaction_verbosity,
+          nested_data=true,
+          default=-1,
+          hint='int',
+          added='5.3',
+          keep=false,
+          order=39
+        )
+      }}"
+    _mongodb_cfg_system_log_component_storage_wt_wt_verify_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.storage.wt.wtVerify.verbosity',
+          raw=mongodb_cfg_system_log_component_storage_wt_wt_verify_verbosity,
+          nested_data=true,
+          default=-1,
+          hint='int',
+          added='5.3',
+          keep=false,
+          order=40
+        )
+      }}"
+    _mongodb_cfg_system_log_component_storage_wt_wt_write_log_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.replication.storage.wt.wtWriteLog.verbosity',
+          raw=mongodb_cfg_system_log_component_storage_wt_wt_write_log_verbosity,
+          nested_data=true,
+          default=-1,
+          hint='int',
+          added='5.3',
+          keep=false,
+          order=41
+        )
+      }}"
+    _mongodb_cfg_system_log_component_transaction_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.transaction.verbosity',
+          raw=mongodb_cfg_system_log_component_transaction_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          added='5.3',
+          keep=false,
+          order=42
+        )
+      }}"
+    _mongodb_cfg_system_log_component_write_verbosity: "{{
+        {} | r_pufky.data.v3(
+          section='systemLog',
+          key='component.write.verbosity',
+          raw=mongodb_cfg_system_log_component_write_verbosity,
+          nested_data=true,
+          default=0,
+          hint='int',
+          added='5.3',
+          keep=false,
+          order=45
+        )
+      }}"
+    _mongodb_cfg_process_management_fork: "{{ {} | r_pufky.data.v3(
+          section='processManagement',
+          key='fork',
+          raw=mongodb_cfg_process_management_fork,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=1
+        )
+      }}"
+    _mongodb_cfg_process_management_pid_file_path: "{{ {} | r_pufky.data.v3(
+          section='processManagement',
+          key='pidFilePath',
+          raw=mongodb_cfg_process_management_pid_file_path,
+          nested_data=true,
+          default='',
+          hint='str',
+          deprecated=true,
+          keep=false,
+          order=2
+        )
+      }}"
+    _mongodb_cfg_process_management_time_zone_info: "{{ {} | r_pufky.data.v3(
+          section='processManagement',
+          key='timeZoneInfo',
+          raw=mongodb_cfg_process_management_time_zone_info,
+          nested_data=true,
+          default='/usr/share/zoneinfo',
+          hint='str',
+          order=3
+        )
+      }}"
+    _mongodb_cfg_net_port: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='port',
+          raw=mongodb_cfg_net_port,
+          nested_data=true,
+          default=27017,
+          hint='int',
+          order=1
+        )
+      }}"
+    _mongodb_cfg_net_bind_ip: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='bindIp',
+          raw=mongodb_cfg_net_bind_ip,
+          data=mongodb_cfg_net_bind_ip | join(','),
+          nested_data=true,
+          default=['localhost', '127.0.0.1'],
+          hint='list of str',
+          keep=false,
+          order=2
+        )
+      }}"
+    _mongodb_cfg_net_bind_ip_all: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='bindIpAll',
+          raw=mongodb_cfg_net_bind_ip_all,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=3
+        )
+      }}"
+    _mongodb_cfg_net_max_incoming_connections: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='maxIncomingConnections',
+          raw=mongodb_cfg_net_max_incoming_connections,
+          nested_data=true,
+          default=209714,
+          hint='int',
+          added='8.1',
+          keep=false,
+          order=4
+        )
+      }}"
+    _mongodb_cfg_net_wire_object_check: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='wireObjectCheck',
+          raw=mongodb_cfg_net_wire_object_check,
+          nested_data=true,
+          default=true,
+          hint='bool',
+          keep=false,
+          order=5
+        )
+      }}"
+    _mongodb_cfg_net_ipv6: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='wireObjectCheck',
+          raw=mongodb_cfg_net_ipv6,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=5
+        )
+      }}"
+    _mongodb_cfg_net_unix_domain_socket_enabled: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='unixDomainSocket.enabled',
+          raw=mongodb_cfg_net_unix_domain_socket_enabled,
+          nested_data=true,
+          default=true,
+          hint='bool',
+          keep=false,
+          order=6
+        )
+      }}"
+    _mongodb_cfg_net_unix_domain_socket_path_prefix: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='unixDomainSocket.pathPrefix',
+          raw=mongodb_cfg_net_unix_domain_socket_path_prefix,
+          nested_data=true,
+          default='/tmp',
+          hint='str',
+          keep=false,
+          order=7
+        )
+      }}"
+    _mongodb_cfg_net_unix_domain_socket_file_permissions: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='unixDomainSocket.filePermissions',
+          raw=mongodb_cfg_net_unix_domain_socket_file_permissions,
+          nested_data=true,
+          default='0700',
+          hint='str',
+          keep=false,
+          order=8
+        )
+      }}"
+    _mongodb_cfg_net_tls_mode: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='tls.mode',
+          raw=mongodb_cfg_net_tls_mode,
+          nested_data=true,
+          default='disabled',
+          hint='str',
+          keep=false,
+          order=9
+        )
+      }}"
+    _mongodb_cfg_net_tls_certificate_key_file: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='tls.certificateKeyFile',
+          raw=mongodb_cfg_net_tls_certificate_key_file,
+          nested_data=true,
+          default='',
+          _src=(
+            mongodb_cfg_net_tls_certificate_key_file |
+            regex_replace('\\/$', '')
+          ),
+          _dest=_mongodb.etc_root ~ '/tls/key.pem',
+          hint='str',
+          keep=false,
+          order=10
+        )
+      }}"
+    _mongodb_cfg_net_tls_certificate_key_file_password: "{{
+        {} | r_pufky.data.v3(
+          section='net',
+          key='tls.certificateKeyFilePassword',
+          raw=mongodb_cfg_net_tls_certificate_key_file_password,
+          nested_data=true,
+          default='',
+          hint='str',
+          sensitive=true,
+          keep=false,
+          order=11
+        )
+      }}"
+    _mongodb_cfg_net_tls_certificate_selector: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='tls.certificateSelector',
+          raw=mongodb_cfg_net_tls_certificate_selector,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=12
+        )
+      }}"
+    _mongodb_cfg_net_tls_cluster_certificate_selector: "{{
+        {} | r_pufky.data.v3(
+          section='net',
+          key='tls.clusterCertificateSelector',
+          raw=mongodb_cfg_net_tls_cluster_certificate_selector,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=13
+        )
+      }}"
+    _mongodb_cfg_net_tls_cluster_file: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='tls.clusterFile',
+          raw=mongodb_cfg_net_tls_cluster_file,
+          nested_data=true,
+          default='',
+          _src=mongodb_cfg_net_tls_cluster_file | regex_replace('\\/$', ''),
+          _dest=_mongodb.etc_root ~ '/tls/cluster.pem',
+          hint='str',
+          keep=false,
+          order=14
+        )
+      }}"
+    _mongodb_cfg_net_tls_cluster_password: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='tls.clusterPassword',
+          raw=mongodb_cfg_net_tls_cluster_password,
+          nested_data=true,
+          default='',
+          hint='str',
+          sensitive=true,
+          keep=false,
+          order=15
+        )
+      }}"
+    _mongodb_cfg_net_tls_cluster_auth_x509_attributes: "{{
+        {} | r_pufky.data.v3(
+          section='net',
+          key='tls.clusterAuthX509.attributes',
+          raw=mongodb_cfg_net_tls_cluster_auth_x509_attributes,
+          nested_data=true,
+          default='',
+          hint='str',
+          added='7.0',
+          keep=false,
+          order=16
+        )
+      }}"
+    _mongodb_cfg_net_tls_cluster_auth_x509_extension_value: "{{
+        {} | r_pufky.data.v3(
+          section='net',
+          key='tls.clusterAuthX509.extensionValue',
+          raw=mongodb_cfg_net_tls_cluster_auth_x509_extension_value,
+          nested_data=true,
+          default='',
+          hint='str',
+          added='7.0',
+          keep=false,
+          order=17
+        )
+      }}"
+    _mongodb_cfg_net_tls_ca_file: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='tls.CAFile',
+          raw=mongodb_cfg_net_tls_ca_file,
+          nested_data=true,
+          default='',
+          _src=mongodb_cfg_net_tls_ca_file | regex_replace('\\/$', ''),
+          _dest=_mongodb.etc_root ~ '/tls/ca.pem',
+          hint='str',
+          keep=false,
+          order=18
+        )
+      }}"
+    _mongodb_cfg_net_tls_cluster_ca_file: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='tls.clusterCAFile',
+          raw=mongodb_cfg_net_tls_cluster_ca_file,
+          nested_data=true,
+          default='',
+          _src=mongodb_cfg_net_tls_cluster_ca_file | regex_replace('\\/$', ''),
+          _dest=_mongodb.etc_root ~ '/tls/cluster_ca.pem',
+          hint='str',
+          keep=false,
+          order=19
+        )
+      }}"
+    _mongodb_cfg_net_tls_crl_file: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='tls.CRLFile',
+          raw=mongodb_cfg_net_tls_crl_file,
+          nested_data=true,
+          default='',
+          _src=mongodb_cfg_net_tls_crl_file | regex_replace('\\/$', ''),
+          _dest=_mongodb.etc_root ~ '/tls/crl.pem',
+          hint='str',
+          keep=false,
+          order=20
+        )
+      }}"
+    _mongodb_cfg_net_tls_allow_connections_without_certificates: "{{
+        {} | r_pufky.data.v3(
+          section='net',
+          key='tls.allowConnectionsWithoutCertificates',
+          raw=mongodb_cfg_net_tls_allow_connections_without_certificates,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=21
+        )
+      }}"
+    _mongodb_cfg_net_tls_allow_invalid_certificates: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='tls.allowInvalidCertificates',
+          raw=mongodb_cfg_net_tls_allow_invalid_certificates,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=22
+        )
+      }}"
+    _mongodb_cfg_net_tls_allow_invalid_hostnames: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='tls.allowInvalidHostnames',
+          raw=mongodb_cfg_net_tls_allow_invalid_hostnames,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=23
+        )
+      }}"
+    _mongodb_cfg_net_tls_disabled_protocols: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='tls.disabledProtocols',
+          raw=mongodb_cfg_net_tls_disabled_protocols,
+          data=mongodb_cfg_net_tls_disabled_protocols | join(','),
+          nested_data=true,
+          default=[],
+          hint='list of str',
+          keep=false,
+          order=24
+        )
+      }}"
+    _mongodb_cfg_net_tls_fips_mode: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='tls.FIPSMode',
+          raw=mongodb_cfg_net_tls_fips_mode,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=25
+        )
+      }}"
+    _mongodb_cfg_net_tls_log_versions: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='tls.logVersions',
+          raw=mongodb_cfg_net_tls_log_versions,
+          data=mongodb_cfg_net_tls_log_versions | join(','),
+          nested_data=true,
+          default=[],
+          hint='list of str',
+          keep=false,
+          order=26
+        )
+      }}"
+    _mongodb_cfg_net_compression_compressors: "{{ {} | r_pufky.data.v3(
+          section='net',
+          key='compression.compressors',
+          raw=mongodb_cfg_net_compression_compressors,
+          data=mongodb_cfg_net_compression_compressors | join(','),
+          nested_data=true,
+          default=['snappy', 'zstd', 'zlib'],
+          hint='list of str',
+          keep=false,
+          order=27
+        )
+      }}"
+    _mongodb_cfg_security_key_file: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='keyFile',
+          raw=mongodb_cfg_security_key_file,
+          nested_data=true,
+          default='',
+          _src=mongodb_cfg_security_key_file | regex_replace('\\/$', ''),
+          _dest=_mongodb.etc_root ~ '/security/keyfile',
+          hint='str',
+          keep=false,
+          order=1
+        )
+      }}"
+    _mongodb_cfg_security_cluster_auth_mode: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='clusterAuthMode',
+          raw=mongodb_cfg_security_cluster_auth_mode,
+          nested_data=true,
+          default='keyFile',
+          hint='str',
+          keep=false,
+          order=2
+        )
+      }}"
+    _mongodb_cfg_security_authorization: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='authorization',
+          raw=mongodb_cfg_security_authorization | lower,
+          nested_data=true,
+          default='disabled',
+          hint='str',
+          keep=false,
+          order=3
+        )
+      }}"
+    _mongodb_cfg_security_transition_to_auth: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='transitionToAuth',
+          raw=mongodb_cfg_security_transition_to_auth,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=4
+        )
+      }}"
+    _mongodb_cfg_security_javascript_enabled: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='javascriptEnabled',
+          raw=mongodb_cfg_security_javascript_enabled,
+          nested_data=true,
+          default=true,
+          hint='bool',
+          keep=false,
+          order=5
+        )
+      }}"
+    _mongodb_cfg_security_redact_client_log_data: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='redactClientLogData',
+          raw=mongodb_cfg_security_redact_client_log_data,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=6
+        )
+      }}"
+    # TODO - this is rendered as a YAML list.
+    _mongodb_cfg_security_cluster_ip_source_allow_list: "{{
+        {} | r_pufky.data.v3(
+          section='security',
+          key='clusterIpSourceAllowlist',
+          raw=mongodb_cfg_security_cluster_ip_source_allow_list,
+          nested_data=true,
+          default=[],
+          hint='list of str',
+          added='5.0',
+          keep=false,
+          order=7
+        )
+      }}"
+    _mongodb_cfg_security_enable_encryption: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='enableEncryption',
+          raw=mongodb_cfg_security_enable_encryption,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=8
+        )
+      }}"
+    _mongodb_cfg_security_encryption_cipher_mode: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='encryptionCipherMode',
+          raw=mongodb_cfg_security_encryption_cipher_mode,
+          nested_data=true,
+          default='AES256-CBC',
+          hint='str',
+          keep=false,
+          order=9
+        )
+      }}"
+    _mongodb_cfg_security_encryption_key_file: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='encryptionKeyFile',
+          raw=mongodb_cfg_security_encryption_key_file,
+          nested_data=true,
+          default='',
+          _src=(
+            mongodb_cfg_security_encryption_key_file |
+            regex_replace('\\/$', '')
+          ),
+          _dest=_mongodb.etc_root ~ '/security/encryption_keyfile',
+          hint='str',
+          keep=false,
+          order=10
+        )
+      }}"
+    _mongodb_cfg_security_kmip_key_identifier: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='kmip.keyIdentifier',
+          raw=mongodb_cfg_security_kmip_key_identifier,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=11
+        )
+      }}"
+    _mongodb_cfg_security_kmip_rotate_master_key: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='kmip.rotateMasterKey',
+          raw=mongodb_cfg_security_kmip_rotate_master_key,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=12
+        )
+      }}"
+    _mongodb_cfg_security_kmip_server_name: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='kmip.serverName',
+          raw=mongodb_cfg_security_kmip_server_name,
+          data=mongodb_cfg_security_kmip_server_name | join(','),
+          nested_data=true,
+          default=[],
+          hint='list of str',
+          keep=false,
+          order=13
+        )
+      }}"
+    _mongodb_cfg_security_kmip_port: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='kmip.port',
+          raw=mongodb_cfg_security_kmip_port,
+          nested_data=true,
+          default=5696,
+          hint='int',
+          keep=false,
+          order=14
+        )
+      }}"
+    _mongodb_cfg_security_kmip_client_certificate_file: "{{
+        {} | r_pufky.data.v3(
+          section='security',
+          key='kmip.clientCertificateFile',
+          raw=mongodb_cfg_security_kmip_client_certificate_file,
+          nested_data=true,
+          default='',
+          _src=(
+            mongodb_cfg_security_kmip_client_certificate_file |
+            regex_replace('\\/$', '')
+          ),
+          _dest=_mongodb.etc_root ~ '/security/kmip_client.pem',
+          hint='str',
+          keep=false,
+          order=15
+        )
+      }}"
+    _mongodb_cfg_security_kmip_client_certificate_password: "{{
+        {} | r_pufky.data.v3(
+          section='security',
+          key='kmip.clientCertificatePassword',
+          raw=mongodb_cfg_security_kmip_client_certificate_password,
+          nested_data=true,
+          default='',
+          hint='str',
+          sensitive=true,
+          keep=false,
+          order=16
+        )
+      }}"
+    _mongodb_cfg_security_kmip_client_certificate_selector: "{{
+        {} | r_pufky.data.v3(
+          section='security',
+          key='kmip.clientCertificateSelector',
+          raw=mongodb_cfg_security_kmip_client_certificate_selector,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=17
+        )
+      }}"
+    _mongodb_cfg_security_kmip_server_ca_file: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='kmip.serverCAFile',
+          raw=mongodb_cfg_security_kmip_server_ca_file,
+          nested_data=true,
+          default='',
+          _src=(
+            mongodb_cfg_security_kmip_server_ca_file |
+            regex_replace('\\/$', '')
+          ),
+          _dest=_mongodb.etc_root ~ '/security/kmip_ca.pem',
+          hint='str',
+          keep=false,
+          order=18
+        )
+      }}"
+    _mongodb_cfg_security_kmip_connect_retries: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='kmip.connectRetries',
+          raw=mongodb_cfg_security_kmip_connect_retries,
+          nested_data=true,
+          default=0,
+          hint='int',
+          keep=false,
+          order=19
+        )
+      }}"
+    _mongodb_cfg_security_kmip_connect_timeout_ms: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='kmip.connectTimeoutMS',
+          raw=mongodb_cfg_security_kmip_connect_timeout_ms,
+          nested_data=true,
+          default=5000,
+          hint='int',
+          keep=false,
+          order=20
+        )
+      }}"
+    _mongodb_cfg_security_kmip_activate_keys: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='kmip.activateKeys',
+          raw=mongodb_cfg_security_kmip_activate_keys,
+          nested_data=true,
+          default=true,
+          hint='bool',
+          added='5.3',
+          keep=false,
+          order=21
+        )
+      }}"
+    _mongodb_cfg_security_kmip_key_state_polling_seconds: "{{
+        {} | r_pufky.data.v3(
+          section='security',
+          key='kmip.keyStatePollingSeconds',
+          raw=mongodb_cfg_security_kmip_key_state_polling_seconds,
+          nested_data=true,
+          default=900,
+          hint='int',
+          added='5.3',
+          keep=false,
+          order=22
+        )
+      }}"
+    _mongodb_cfg_security_kmip_key_use_legacy_protocol: "{{
+        {} | r_pufky.data.v3(
+          section='security',
+          key='kmip.useLegacyProtocol',
+          raw=mongodb_cfg_security_kmip_key_use_legacy_protocol,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          added='7.0',
+          keep=false,
+          order=23
+        )
+      }}"
+    _mongodb_cfg_security_sasl_host_name: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='sasl.hostName',
+          raw=mongodb_cfg_security_sasl_host_name,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=24
+        )
+      }}"
+    _mongodb_cfg_security_sasl_service_name: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='sasl.serviceName',
+          raw=mongodb_cfg_security_sasl_service_name,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=25
+        )
+      }}"
+    _mongodb_cfg_security_sasl_authd_socket_path: "{{ {} | r_pufky.data.v3(
+          section='security',
+          key='sasl.saslauthdSocketPath',
+          raw=mongodb_cfg_security_sasl_authd_socket_path,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=26
+        )
+      }}"
+    _mongodb_cfg_set_parameter_search_index_management_host_and_port: "{{
+        {} | r_pufky.data.v3(
+          section='setParameter',
+          key='searchIndexManagementHostAndPort',
+          raw=mongodb_cfg_set_parameter_search_index_management_host_and_port,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=1
+        )
+      }}"
+    _mongodb_cfg_set_parameter_skip_authentication_to_search_index_management_server: "{{
+        {} | r_pufky.data.v3(
+          section='setParameter',
+          key='skipAuthenticationToSearchIndexManagementServer',
+          raw=mongodb_cfg_set_parameter_skip_authentication_to_search_index_management_server,
+          nested_data=true,
+          default=true,
+          hint='bool',
+          keep=false,
+          order=2
+        )
+      }}"
+    _mongodb_cfg_set_parameter_mongot_host: "{{ {} | r_pufky.data.v3(
+          section='setParameter',
+          key='mongotHost',
+          raw=mongodb_cfg_set_parameter_mongot_host,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=3
+        )
+      }}"
+    _mongodb_cfg_set_parameter_skip_authentication_to_mongot: "{{
+        {} | r_pufky.data.v3(
+          section='setParameter',
+          key='skipAuthenticationToMongot',
+          raw=mongodb_cfg_set_parameter_skip_authentication_to_mongot,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=4
+        )
+      }}"
+    _mongodb_cfg_set_parameter_use_grpc_for_search: "{{ {} | r_pufky.data.v3(
+          section='setParameter',
+          key='useGrpcForSearch',
+          raw=mongodb_cfg_set_parameter_use_grpc_for_search,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=5
+        )
+      }}"
+    _mongodb_cfg_set_parameter_search_tls_mode: "{{ {} | r_pufky.data.v3(
+          section='setParameter',
+          key='searchTLSMode',
+          raw=mongodb_cfg_set_parameter_search_tls_mode,
+          nested_data=true,
+          default='globalTLS',
+          hint='str',
+          keep=false,
+          order=6
+        )
+      }}"
+    _mongodb_cfg_storage_db_path: "{{ {} | r_pufky.data.v3(
+          section='storage',
+          key='dbPath',
+          raw=_mongodb.db_root,
+          nested_data=true,
+          default='/var/lib/mongodb',
+          hint='str',
+          order=1
+        )
+      }}"
+    _mongodb_cfg_storage_data_path: "{{ {} | r_pufky.data.v3(
+          section='storage',
+          key='dataPath',
+          raw=_mongodb.data_root,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=2
+        )
+      }}"
+    _mongodb_cfg_storage_journal_commit_interval_ms: "{{ {} | r_pufky.data.v3(
+          section='storage',
+          key='journal.commitIntervalMs',
+          raw=mongodb_cfg_storage_journal_commit_interval_ms,
+          nested_data=true,
+          default=100,
+          hint='int',
+          keep=false,
+          order=3
+        )
+      }}"
+    _mongodb_cfg_storage_directory_per_db: "{{ {} | r_pufky.data.v3(
+          section='storage',
+          key='journal.directoryPerDB',
+          raw=mongodb_cfg_storage_directory_per_db,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=4
+        )
+      }}"
+    _mongodb_cfg_storage_sync_period_secs: "{{ {} | r_pufky.data.v3(
+          section='storage',
+          key='journal.syncPeriodSecs',
+          raw=mongodb_cfg_storage_sync_period_secs,
+          nested_data=true,
+          default=60,
+          hint='int',
+          keep=false,
+          order=5
+        )
+      }}"
+    _mongodb_cfg_storage_engine: "{{ {} | r_pufky.data.v3(
+          section='storage',
+          key='engine',
+          raw=mongodb_cfg_storage_engine,
+          nested_data=true,
+          default='wiredTiger',
+          hint='str',
+          keep=false,
+          order=6
+        )
+      }}"
+    _mongodb_cfg_storage_oplog_min_retention_hours: "{{ {} | r_pufky.data.v3(
+          section='storage',
+          key='oplogMinRetentionHours',
+          raw=mongodb_cfg_storage_oplog_min_retention_hours,
+          nested_data=true,
+          default=0.0,
+          hint='float',
+          keep=false,
+          order=7
+        )
+      }}"
+    _mongodb_cfg_storage_wired_tiger_engine_config_cache_size_gb: "{{
+        {} | r_pufky.data.v3(
+          section='storage',
+          key='wiredTiger.engineConfig.cacheSizeGB',
+          raw=mongodb_cfg_storage_wired_tiger_engine_config_cache_size_gb,
+          nested_data=true,
+          default=-1,
+          hint='int',
+          keep=false,
+          order=8
+        )
+      }}"
+    _mongodb_cfg_storage_wired_tiger_engine_config_cache_size_pct: "{{
+        {} | r_pufky.data.v3(
+          section='storage',
+          key='wiredTiger.engineConfig.cacheSizePct',
+          raw=mongodb_cfg_storage_wired_tiger_engine_config_cache_size_pct,
+          nested_data=true,
+          default=-1,
+          hint='float',
+          keep=false,
+          order=9
+        )
+      }}"
+    _mongodb_cfg_storage_wired_tiger_engine_config_journal_compressor: "{{
+        {} | r_pufky.data.v3(
+          section='storage',
+          key='wiredTiger.engineConfig.journalCompressor',
+          raw=(
+            mongodb_cfg_storage_wired_tiger_engine_config_journal_compressor |
+            lower
+          ),
+          nested_data=true,
+          default='snappy',
+          hint='str',
+          keep=false,
+          order=10
+        )
+      }}"
+    _mongodb_cfg_storage_wired_tiger_engine_config_directory_for_indexes: "{{
+        {} | r_pufky.data.v3(
+          section='storage',
+          key='wiredTiger.engineConfig.directoryForIndexes',
+          raw=mongodb_cfg_storage_wired_tiger_engine_config_directory_for_indexes,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=11
+        )
+      }}"
+    _mongodb_cfg_storage_wired_tiger_engine_config_zstd_compression_level: "{{
+        {} | r_pufky.data.v3(
+          section='storage',
+          key='wiredTiger.engineConfig.zstdCompressionLevel',
+          raw=mongodb_cfg_storage_wired_tiger_engine_config_zstd_compression_level,
+          nested_data=true,
+          default=6,
+          hint='int',
+          added='5.0',
+          keep=false,
+          order=12
+        )
+      }}"
+    _mongodb_cfg_storage_wired_tiger_collection_config_block_compressor: "{{
+        {} | r_pufky.data.v3(
+          section='storage',
+          key='wiredTiger.collectionConfig.blockCompressor',
+          raw=mongodb_cfg_storage_wired_tiger_collection_config_block_compressor,
+          nested_data=true,
+          default='snappy',
+          hint='str',
+          keep=false,
+          order=13
+        )
+      }}"
+    _mongodb_cfg_storage_wired_tiger_index_config_prefix_compression: "{{
+        {} | r_pufky.data.v3(
+          section='storage',
+          key='wiredTiger.indexConfig.prefixCompression',
+          raw=mongodb_cfg_storage_wired_tiger_index_config_prefix_compression,
+          nested_data=true,
+          default=true,
+          hint='bool',
+          keep=false,
+          order=14
+        )
+      }}"
+    _mongodb_cfg_storage_in_memory_engine_config_in_memory_size_gb: "{{
+        {} | r_pufky.data.v3(
+          section='storage',
+          key='inMemory.engineConfig.inMemorySizeGB',
+          raw=mongodb_cfg_storage_in_memory_engine_config_in_memory_size_gb,
+          nested_data=true,
+          default=-1,
+          hint='float',
+          keep=false,
+          order=15
+        )
+      }}"
+    _mongodb_cfg_operation_profiling_mode: "{{ {} | r_pufky.data.v3(
+          section='operationProfiling',
+          key='mode',
+          raw=mongodb_cfg_operation_profiling_mode,
+          nested_data=true,
+          default='off',
+          hint='str',
+          keep=false,
+          order=1
+        )
+      }}"
+    _mongodb_cfg_operation_profiling_slow_op_threshold_ms: "{{
+        {} | r_pufky.data.v3(
+          section='operationProfiling',
+          key='slowOpThresholdMs',
+          raw=mongodb_cfg_operation_profiling_slow_op_threshold_ms,
+          nested_data=true,
+          default=100,
+          hint='str',
+          keep=false,
+          order=2
+        )
+      }}"
+    _mongodb_cfg_operation_profiling_slow_op_sample_rate: "{{
+        {} | r_pufky.data.v3(
+          section='operationProfiling',
+          key='slowOpSampleRate',
+          raw=mongodb_cfg_operation_profiling_slow_op_sample_rate,
+          nested_data=true,
+          default=1.0,
+          hint='float',
+          keep=false,
+          order=3
+        )
+      }}"
+    _mongodb_cfg_operation_profiling_filter: "{{ {} | r_pufky.data.v3(
+          section='operationProfiling',
+          key='filter',
+          raw=mongodb_cfg_operation_profiling_filter,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=4
+        )
+      }}"
+    _mongodb_cfg_replication_oplog_size_mb: "{{ {} | r_pufky.data.v3(
+          section='replication',
+          key='oplogSizeMB',
+          raw=mongodb_cfg_replication_oplog_size_mb,
+          nested_data=true,
+          default=-1,
+          hint='int',
+          keep=false,
+          order=1
+        )
+      }}"
+    _mongodb_cfg_replication_repl_set_name: "{{ {} | r_pufky.data.v3(
+          section='replication',
+          key='replSetName',
+          raw=mongodb_cfg_replication_repl_set_name,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=2
+        )
+      }}"
+    _mongodb_cfg_replication_enable_majority_read_concern: "{{
+        {} | r_pufky.data.v3(
+          section='replication',
+          key='enableMajorityReadConcern',
+          raw=mongodb_cfg_replication_enable_majority_read_concern,
+          nested_data=true,
+          default=true,
+          hint='bool',
+          deprecated=true,
+          keep=false,
+          order=3
+        )
+      }}"
+    _mongodb_cfg_replication_local_ping_threshold_ms: "{{ {} | r_pufky.data.v3(
+          section='replication',
+          key='localPingThresholdMs',
+          raw=mongodb_cfg_replication_local_ping_threshold_ms,
+          nested_data=true,
+          default=15,
+          hint='int',
+          keep=false,
+          order=4
+        )
+      }}"
+    _mongodb_cfg_sharding_cluster_role: "{{ {} | r_pufky.data.v3(
+          section='sharding',
+          key='clusterRole',
+          raw=mongodb_cfg_sharding_cluster_role | lower,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=1
+        )
+      }}"
+    _mongodb_cfg_sharding_config_db: "{{ {} | r_pufky.data.v3(
+          section='sharding',
+          key='configDB',
+          raw=mongodb_cfg_sharding_config_db,
+          data=mongodb_cfg_sharding_config_db | join(','),
+          nested_data=true,
+          default=[],
+          hint='list of str',
+          keep=false,
+          order=3
+        )
+      }}"
+    _mongodb_cfg_audit_log_audit_encryption_key_identifier: "{{
+        {} | r_pufky.data.v3(
+          section='auditLog',
+          key='auditEncryptionKeyIdentifier',
+          raw=mongodb_cfg_audit_log_audit_encryption_key_identifier,
+          nested_data=true,
+          default='',
+          hint='str',
+          added='6.0',
+          keep=false,
+          order=1
+        )
+      }}"
+    _mongodb_cfg_audit_log_compression_mode: "{{ {} | r_pufky.data.v3(
+          section='auditLog',
+          key='compressionMode',
+          raw=mongodb_cfg_audit_log_compression_mode | lower,
+          nested_data=true,
+          default='none',
+          hint='str',
+          added='5.3',
+          keep=false,
+          order=2
+        )
+      }}"
+    _mongodb_cfg_audit_log_destination: "{{ {} | r_pufky.data.v3(
+          section='auditLog',
+          key='destination',
+          raw=mongodb_cfg_audit_log_destination,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=3
+        )
+      }}"
+    _mongodb_cfg_audit_log_filter: "{{ {} | r_pufky.data.v3(
+          section='auditLog',
+          key='filter',
+          raw=mongodb_cfg_audit_log_filter,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=4
+        )
+      }}"
+    _mongodb_cfg_audit_log_format: "{{ {} | r_pufky.data.v3(
+          section='auditLog',
+          key='format',
+          raw=mongodb_cfg_audit_log_format,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=5
+        )
+      }}"
+    _mongodb_cfg_audit_log_local_audit_key_file: "{{ {} | r_pufky.data.v3(
+          section='auditLog',
+          key='localAuditKeyFile',
+          raw=mongodb_cfg_audit_log_local_audit_key_file,
+          nested_data=true,
+          default='',
+          _src=(
+            mongodb_cfg_audit_log_local_audit_key_file |
+            regex_replace('\\/$', '')
+          ),
+          _dest=_mongodb.etc_root ~ '/audit/key_file',
+          hint='str',
+          added='5.3',
+          keep=false,
+          order=6
+        )
+      }}"
+    _mongodb_cfg_audit_log_path: "{{ {} | r_pufky.data.v3(
+          section='auditLog',
+          key='path',
+          raw=mongodb_cfg_audit_log_path,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=7
+        )
+      }}"
+    _mongodb_cfg_audit_log_runtime_configuration: "{{ {} | r_pufky.data.v3(
+          section='auditLog',
+          key='runtimeConfiguration',
+          raw=mongodb_cfg_audit_log_runtime_configuration,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=8
+        )
+      }}"
+    _mongodb_cfg_audit_log_schema: "{{ {} | r_pufky.data.v3(
+          section='auditLog',
+          key='schema',
+          raw=mongodb_cfg_audit_log_schema,
+          nested_data=true,
+          default='mongo',
+          hint='str',
+          added='8.0',
+          keep=false,
+          order=9
+        )
+      }}"
+    _mongodb_cfg_sync_source_replica_set_host_and_port: "{{
+        {} | r_pufky.data.v3(
+          section='syncSource',
+          key='replicaSet.hostAndPort',
+          raw=mongodb_cfg_sync_source_replica_set_host_and_port,
+          nested_data=true,
+          default=[],
+          hint='list of str',
+          keep=false,
+          order=1
+        )
+      }}"
+    _mongodb_cfg_sync_source_replica_set_username: "{{ {} | r_pufky.data.v3(
+          section='syncSource',
+          key='replicaSet.username',
+          raw=mongodb_cfg_sync_source_replica_set_username,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=2
+        )
+      }}"
+    _mongodb_cfg_sync_source_replica_set_password_file: "{{
+        {} | r_pufky.data.v3(
+          section='syncSource',
+          key='replicaSet.passwordFile',
+          raw=mongodb_cfg_sync_source_replica_set_password_file,
+          nested_data=true,
+          default='',
+          _src=(
+            mongodb_cfg_sync_source_replica_set_password_file |
+            regex_replace('\\/$', '')
+          ),
+          _dest=_mongodb.etc_root ~ '/replica/password_file',
+          hint='str',
+          keep=false,
+          order=3
+        )
+      }}"
+    _mongodb_cfg_sync_source_replica_set_auth_source: "{{ {} | r_pufky.data.v3(
+          section='syncSource',
+          key='replicaSet.authSource',
+          raw=mongodb_cfg_sync_source_replica_set_auth_source,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=4
+        )
+      }}"
+    _mongodb_cfg_sync_source_replica_set_tls: "{{ {} | r_pufky.data.v3(
+          section='syncSource',
+          key='replicaSet.tls',
+          raw=mongodb_cfg_sync_source_replica_set_tls,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=5
+        )
+      }}"
+    _mongodb_cfg_sync_source_replica_set_read_preference: "{{
+        {} | r_pufky.data.v3(
+          section='syncSource',
+          key='replicaSet.readPreference',
+          raw=mongodb_cfg_sync_source_replica_set_read_preference,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=6
+        )
+      }}"
+    _mongodb_cfg_sync_source_replica_set_router_host_and_port: "{{
+        {} | r_pufky.data.v3(
+          section='syncSource',
+          key='replicaSet.router.hostAndPort',
+          raw=mongodb_cfg_sync_source_replica_set_router_host_and_port,
+          nested_data=true,
+          default=[],
+          hint='list of str',
+          keep=false,
+          order=7
+        )
+      }}"
+    _mongodb_cfg_sync_source_replica_set_router_username: "{{
+        {} | r_pufky.data.v3(
+          section='syncSource',
+          key='replicaSet.router.username',
+          raw=mongodb_cfg_sync_source_replica_set_router_username,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=8
+        )
+      }}"
+    _mongodb_cfg_sync_source_replica_set_router_password_file: "{{
+        {} | r_pufky.data.v3(
+          section='syncSource',
+          key='replicaSet.router.passwordFile',
+          raw=mongodb_cfg_sync_source_replica_set_router_password_file,
+          nested_data=true,
+          default='',
+          _src=(
+            mongodb_cfg_sync_source_replica_set_router_password_file |
+            regex_replace('\\/$', '')
+          ),
+          _dest=_mongodb.etc_root ~ '/replica/router_password_file',
+          hint='str',
+          keep=false,
+          order=9
+        )
+      }}"
+    _mongodb_cfg_sync_source_replica_set_router_tls: "{{ {} | r_pufky.data.v3(
+          section='syncSource',
+          key='replicaSet.router.tls',
+          raw=mongodb_cfg_sync_source_replica_set_router_tls,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=10
+        )
+      }}"
+    _mongodb_cfg_sync_source_replica_set_router_read_preference: "{{
+        {} | r_pufky.data.v3(
+          section='syncSource',
+          key='replicaSet.router.readPreference',
+          raw=mongodb_cfg_sync_source_replica_set_router_read_preference,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=11
+        )
+      }}"
+    _mongodb_cfg_sync_source_replica_set_ca_file: "{{ {} | r_pufky.data.v3(
+          section='syncSource',
+          key='replicaSet.caFile',
+          raw=mongodb_cfg_sync_source_replica_set_ca_file,
+          nested_data=true,
+          default='',
+          _src=(
+            mongodb_cfg_sync_source_replica_set_ca_file |
+            regex_replace('\\/$', '')
+          ),
+          _dest=_mongodb.etc_root ~ '/replica/ca.pem',
+          hint='str',
+          keep=false,
+          order=12
+        )
+      }}"
+    _mongodb_cfg_server_grpc_address: "{{ {} | r_pufky.data.v3(
+          section='server',
+          key='grpc.address',
+          raw=mongodb_cfg_server_grpc_address,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=1
+        )
+      }}"
+    _mongodb_cfg_server_grpc_tls_mode: "{{ {} | r_pufky.data.v3(
+          section='server',
+          key='grpc.tls.mode',
+          raw=mongodb_cfg_server_grpc_tls_mode,
+          nested_data=true,
+          default='disabled',
+          hint='str',
+          keep=false,
+          order=2
+        )
+      }}"
+    _mongodb_cfg_server_grpc_tls_certificate_key_file: "{{
+        {} | r_pufky.data.v3(
+          section='server',
+          key='grpc.tls.certificateKeyFile',
+          raw=mongodb_cfg_server_grpc_tls_certificate_key_file,
+          nested_data=true,
+          default='',
+          _src=(
+            mongodb_cfg_server_grpc_tls_certificate_key_file |
+            regex_replace('\\/$', '')
+          ),
+          _dest=_mongodb.etc_root ~ '/grpc/key.pem',
+          hint='str',
+          keep=false,
+          order=3
+        )
+      }}"
+    _mongodb_cfg_server_grpc_tls_ca_file: "{{ {} | r_pufky.data.v3(
+          section='server',
+          key='grpc.tls.caFile',
+          raw=mongodb_cfg_server_grpc_tls_ca_file,
+          nested_data=true,
+          default='',
+          _src=(
+            mongodb_cfg_server_grpc_tls_ca_file |
+            regex_replace('\\/$', '')
+          ),
+          _dest=_mongodb.etc_root ~ '/grpc/ca.pem',
+          hint='str',
+          keep=false,
+          order=4
+        )
+      }}"
+    _mongodb_cfg_metrics_enabled: "{{ {} | r_pufky.data.v3(
+          section='metrics',
+          key='enabled',
+          raw=mongodb_cfg_metrics_enabled,
+          nested_data=true,
+          default=false,
+          hint='bool',
+          keep=false,
+          order=1
+        )
+      }}"
+    _mongodb_cfg_metrics_address: "{{ {} | r_pufky.data.v3(
+          section='metrics',
+          key='address',
+          raw=mongodb_cfg_metrics_address,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=2
+        )
+      }}"
+    _mongodb_cfg_health_check_address: "{{ {} | r_pufky.data.v3(
+          section='healthCheck',
+          key='address',
+          raw=mongodb_cfg_health_check_address,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=1
+        )
+      }}"
+    _mongodb_cfg_logging_verbosity: "{{ {} | r_pufky.data.v3(
+          section='logging',
+          key='verbosity',
+          raw=mongodb_cfg_logging_verbosity | upper,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=1
+        )
+      }}"
+    _mongodb_cfg_logging_log_path: "{{ {} | r_pufky.data.v3(
+          section='logging',
+          key='logPath',
+          raw=mongodb_cfg_logging_log_path,
+          nested_data=true,
+          default='',
+          hint='str',
+          keep=false,
+          order=2
+        )
+      }}"
+
+- name: 'Annotate | generate config map'
+  ansible.builtin.set_fact:
+    _mongodb_map: '{{
+        hostvars[inventory_hostname] | dict2items |
+        selectattr("key", "match", "_mongodb_cfg_*")
+      }}'
+    _mongodb_order:
+      - 'systemLog'
+      - 'processManagement'
+      - 'net'
+      - 'security'
+      - 'setParameter'
+      - 'storage'
+      - 'operationProfiling'
+      - 'replication'
+      - 'sharding'
+      - 'auditLog'
+      - 'syncSource'
+      - 'server'
+      - 'metrics'
+      - 'healthCheck'
+      - 'logging'
+
+- name: 'Annotate | generate config YAML'
+  ansible.builtin.set_fact:
+    _mongodb_yaml: '{{
+        _mongodb_yaml | default({}) | combine(item.value.nested_data, recursive=true)
+      }}'
+  loop: '{{ _mongodb_map }}'
+  loop_control:
+    label: '{{ item.key }}'

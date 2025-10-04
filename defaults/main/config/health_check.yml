@@ -1,0 +1,15 @@
+---
+###############################################################################
+# Health Check (healthCheck)
+###############################################################################
+# Reference:
+# * https://www.mongodb.com/docs/manual/reference/configuration-options
+
+# Health check listen address
+#
+# Values:
+#   {HOST|IP}:{PORT}: Hostname or IPv4/6 with port (e.g. localhost:27028).
+#                 '': Use localhost:8080 (default).
+#
+# Default: ''.
+mongodb_cfg_health_check_address: ''
