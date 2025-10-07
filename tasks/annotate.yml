@@ -54,12 +54,19 @@
         order=2
         )
       }}"
+    _mongodb_srv_pgp_key: "{{ {} | r_pufky.data.v3(
+        raw=mongodb_srv_pgp_key,
+        default='8.0',
+        hint='str',
+        order=3
+        )
+      }}"
     _mongodb_srv_user: "{{ {} | r_pufky.data.v3(
         raw=mongodb_srv_user,
         default='mongodb',
         _uid='',
         hint='str',
-        order=3
+        order=4
         )
       }}"
     _mongodb_srv_group: "{{ {} | r_pufky.data.v3(
@@ -67,21 +74,21 @@
         default='mongodb',
         _gid='',
         hint='str',
-        order=4
+        order=5
         )
       }}"
     _mongodb_srv_create_user: "{{ {} | r_pufky.data.v3(
         raw=mongodb_srv_create_user,
         default=true,
         hint='bool',
-        order=5
+        order=6
         )
       }}"
     _mongodb_srv_user_data_manage_enable: "{{ {} | r_pufky.data.v3(
         raw=mongodb_srv_user_data_manage_enable,
         default=false,
         hint='bool',
-        order=6
+        order=7
         )
       }}"
     _mongodb_srv_backup_enable: "{{ {} | r_pufky.data.v3(
@@ -92,35 +99,35 @@
           'mongodb_backup'
         ),
         hint='bool',
-        order=7
+        order=8
         )
       }}"
     _mongodb_srv_backup_dir: "{{ {} | r_pufky.data.v3(
         raw=mongodb_srv_backup_dir | regex_replace('\\/$', ''),
         default='/data/mongodb/backup',
         hint='str',
-        order=8
+        order=9
         )
       }}"
     _mongodb_srv_backup_owner: "{{ {} | r_pufky.data.v3(
         raw=mongodb_srv_backup_owner,
         default='root',
         hint='str',
-        order=9
+        order=10
         )
       }}"
     _mongodb_srv_backup_group: "{{ {} | r_pufky.data.v3(
         raw=mongodb_srv_backup_group,
         default='root',
         hint='str',
-        order=10
+        order=11
         )
       }}"
     _mongodb_srv_backup_schedule: "{{ {} | r_pufky.data.v3(
         raw=mongodb_srv_backup_schedule,
         default='weekly',
         hint='str',
-        order=11
+        order=12
         )
       }}"
 

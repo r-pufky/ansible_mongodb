@@ -49,15 +49,19 @@ mongodb_role_packages:
   - 'mongodb-org'
 
 mongodb_role_apt_sources:
-  - name: 'mongodb-8.2'
+  - name: '{{ "mongodb-" ~ mongodb_srv_version }}'
     types:
       - 'deb'
     uris: 'http://repo.mongodb.org/apt/debian'
     suites:
-      - 'bookworm/mongodb-org/{{ mongodb_srv_version }}'
+      - '{{ "bookworm/mongodb-org/" ~ mongodb_srv_version }}'
     components:
       - 'main'
-    signed_by: 'https://www.mongodb.org/static/pgp/server-8.0.asc'
+    signed_by: '{{
+        "https://www.mongodb.org/static/pgp/server-" ~
+        mongodb_srv_pgp_key ~
+        ".asc"
+      }}'
   - name: 'debian'
     types:
       - 'deb'

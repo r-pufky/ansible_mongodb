@@ -16,6 +16,10 @@
 # Changing versions requires explicit upgrades through each version, including
 # DB import, upgrade, and export; e.g. 4.4 → 5.0 → 6.0 → 7.0 → 8.0.
 #
+# Special Case:
+# * Only versions listed in http://repo.mongodb.org/apt/debian/dists/ are
+#   supported.
+#
 # Versions (Schematic):
 #       MAJOR: Unsafe - requires major role changes; only default version is
 #              supported; older versions may be used at the risk of missing
@@ -44,6 +48,14 @@ mongodb_srv_version: '8.2'
 #
 # Default: True.
 mongodb_srv_fatal_version_enable: true
+
+# MongoDB repository PGP signing key.
+#
+# Default: '8.0' (8.x releases).
+#
+# Reference:
+# * https://pgp.mongodb.com/
+mongodb_srv_pgp_key: '8.0'
 
 ###############################################################################
 # Backup
