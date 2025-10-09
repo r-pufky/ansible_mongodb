@@ -4,7 +4,7 @@
   gather_facts: true  # /proc AVX detection.
   become: true
   tasks:
-    - name: 'Prepare | simulate user media restriction'
+    - name: 'Converge | simulate user media restriction'
       ansible.builtin.file:
         path: '{{ item }}'
         owner: 302
