@@ -14,7 +14,7 @@
 # MongoDB Release.
 #
 # Changing versions requires explicit upgrades through each version, including
-# DB import, upgrade, and export; e.g. 4.4 → 5.0 → 6.0 → 7.0 → 8.0.
+# DB import, upgrade, and export; e.g. 4.4 ➔ 5.0 ➔ 6.0 ➔ 7.0 ➔ 8.0.
 #
 # Special Case:
 # * Only versions listed in http://repo.mongodb.org/apt/debian/dists/ are
