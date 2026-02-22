@@ -1,4 +1,5 @@
 ---
+# yamllint disable rule:line-length
 ###############################################################################
 # MongoDB Config
 ###############################################################################
@@ -12,6 +13,10 @@
 # root mount points as postgres user to ensure they can be read or written.
 #
 # Non-existing / default values are NOT rendered in config file.
+#
+# Reference:
+# * https://www.mongodb.com/docs/mongodb-shell/reference/configure-shell-settings-global
+# yamllint enable rule:line-length
 
 - name: 'Config | create etc directories'
   ansible.builtin.file:
